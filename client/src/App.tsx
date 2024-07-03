@@ -160,7 +160,7 @@ function App() {
   }
   useEffect(() => {
     if (documentImages.length != 0) {
-      setSocketUrl('ws://localhost:8080');
+      setSocketUrl('ws://localhost:8082');
 
       const connectionStatus = {
         [ReadyState.CONNECTING]: 'Connecting',

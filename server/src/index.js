@@ -43,7 +43,7 @@ app.use(errorHandler);
 
 export const { PORT } = process.env;
 
-setupWebSocketServer(8080, app);
+setupWebSocketServer(8082, app);
 // export {PORT}
 
 // export const { PORT, MONGO_URI } = process.env;
