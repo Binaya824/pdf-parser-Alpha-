@@ -1,0 +1,113 @@
+version: "3.9"
+services:
+  # db:
+  #   image: postgres:16
+  #   container_name: postgres
+  #   restart: always
+  #   ports:
+  #     - 5432:5432
+  #   volumes:
+  #     - data:/var/lib/postgresql/data
+  #   networks:
+  #     - mjunction
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: admin
+  #     POSTGRES_DB: mjunction
+  #   logging:
+  #     driver: none
+
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: pgadmin
+  #   restart: always
+  #   ports:
+  #     - "1001:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@root.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   volumes:
+  #     - pgadmin-data:/var/lib/pgadmin
+  #   depends_on:
+  #     - db
+  #   logging:
+  #     driver: none
+
+  client:
+    build:
+      context: "./client"
+      dockerfile: Dockerfile
+    ports:
+      - 5173:5173
+    container_name: client
+    networks:
+      - mjunction
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      # - db
+      - server
+
+  server:
+    build:
+      context: "./server"
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 5050:5050
+      - 8080:8080
+    container_name: server
+    networks:
+      - mjunction
+    environment:
+      # - NODE_ENV=production
+      - POSTGRES_DB=mjunction
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - FIREBASE_PROJECT_ID=pdf-parser-mjunction
+      - FIREBASE_CLIENT_EMAIL=firebase-adminsdk-jhy3g@pdf-parser-mjunction.iam.gserviceaccount.com
+      - FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDd6WJ1yf61pNjF\nI/ptrJiX6JRhgK0IMDcBQ2TJRRKWOUZrhUxd7EYz0cNNHQ6u4XQyQpDhcGxbUYIs\n+gaEqejeBxqgHpkJ9JKk1z5d4luSkHAjnppemTt22TeNcG+w4bpodNI2WHWFU8uT\nm8JHcQr9KQ0+K5rlM5AheWz4gA0kKeK2bwqRvI/wRiLjpmMbS0mQdklLQQ4Nwt98\nkEGCRYIaAqGeTz8AbeHDjeLwVxZAi5X20mPq5HiasmivOfeRdwm4xt5F6J9v3SHx\nEyeWdGoxe1mJ+OLBbApp5CPJ3hQh+aZAFAkHSxaxv9AJabxkzYFjARs+MskdLy7V\nyX2EeQuVAgMBAAECggEABizdg35pHCEuO1jbF/xapeo1X2JMf3DE1xV+F7RHTKqf\nF5S/XSdW2qWBS63sqEcNUDFFOHP/pUNvqpi+10o/8Guk2tWyV776lKO9A342q3qD\noBf+UiDtwiiljYHJniklpoygFGKK3EVbnbabX4/5N6T0AaexQJNNbIu2WjDAtWXv\nMba+WvQB9aFS2nZ/c9kUjZE9PrwpRcFZIf58hGk8bfpY1/MapWrZxz8TsLEMG3wk\n8XpIQwdcAdqEXYk29G+Y/mb/CuFn/MlsI0FgXA5UgXMbbB3X6DvCSUfmLyECqmY5\nJvQDlnv3gbiqo8kt3kB67UrTvs5RuVGBVLMt53A+sQKBgQDvRfLq1JJJXsMcPVph\nzywxQLoftvyKoymr8w7J/CP0BoW0gBnqm4v6+btPFWcI4UJC1td9QttROmWsvIk4\n4CpzI+tayDU6wM9n8m50VoLiSVc54HUMhieSue5QMa9Mb5ffhxeKj8A2F5oTiMRq\nvEdGGMoJCgKMFRvLSEudl5VfpwKBgQDtbLtM1NPdrXZOUztg1RYqzkRSKNOULdon\nIIYhXBKwSY/1JJ3ZzgHLZJkBkIfqX4NcEXPmeOyUGL/AeEoS6IcoBmQp4GJmGQ0l\nx5enJS0U8gpJBYiDNuW1mrD9F/pFxut6YfErbZxNqu4i0Qna0MV6AJn4tTCmkRyP\n7/rCBhRCYwKBgQDk/usHuD3xHlJZOpa/uUkwMiRvqe90t8dwG4Tx5vB54awhHeCv\n2gJURqHvhCpCI2QJGBjQdyXzTZJ1iVNDLbcyzxO2pJndCx70+t6fVRSagVqLt7gO\nLm69TFk6QvLkkoClm2L6Z62rl1cMjv58sIj+G0dw8zWQ37rkCOLlhmedTQKBgQC2\n8/N8p/++sX0ZrA90dZ8ISzvgZ69qXs7dGbXiHPYVvAnfaGDuxk0hsxooV3w0gXdS\nyewarBH5qPyRzt+dpGsJz6r9jfelHya/dwcIeKA9pKmCTW49Vl86SsKZtRFZFYi9\nHJ3fzi4Et3ObhqNmZzvU4IPFX7HmmKl+zPjY7CBOawKBgQDWiUoRoVBdwsyDOUzF\nhda7pUz8LjUXWovIB2vqn+4Y6SbE6JrnurbNsjKhXB57xEccH+EhXsNo6k0WZHBn\ns04THOy6Mj2UNXTMC3sy4XPBRhB548SUYw7mau7LNbXzeThG5vOi7dkeeU/P6luL\nEIZDnfEuaeUKBepIJqTupkqRsA==\n-----END PRIVATE KEY-----\n
+      - FIREBASE_STORAGE_BUCKET=pdf-parser-mjunction.appspot.com
+      - PORT=5050
+    # depends_on:
+    # - db
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - outPutPath:/app/output
+      - uploadPath:/app/uploads
+
+  pyserver:
+    build:
+      context: "./python"
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - FLASK_ENV=development
+      - POSTGRES_DB=mjunction
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - 5151:5151
+    container_name: py-server
+    networks:
+      - mjunction
+    # depends_on:
+    # - db
+    volumes:
+      - ./python:/app
+      - outPutPath:/app/output
+      - uploadPath:/app/uploads
+networks:
+  mjunction:
+    driver: bridge
+
+volumes:
+  data:
+  outPutPath:
+  uploadPath:
+  pgadmin-data:

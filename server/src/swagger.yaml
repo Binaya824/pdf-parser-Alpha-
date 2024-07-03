@@ -1,0 +1,99 @@
+openapi: 3.1.0
+info:
+  title: PDF Parser API Docs
+  description: PDF Parser api documentation
+  version: 0.1.9
+servers:
+  - url: http://localhost:5050/api/v1
+paths:
+  /upload:
+    post:
+      summary: Upload document.
+      tags:
+        - Upload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Document uploaded successfully.
+          content:
+            application/json:
+              example:
+                status: success
+                error: false
+                message: Document uploaded successfully
+                data:
+                  outputArray:
+        "422":
+          description: Unprocessable Entity.
+          content:
+            application/json:
+              example:
+                status: failed
+                error: true
+                message: Only a single file is allowed to upload.
+        "415":
+          description: Unsupported Media Type.
+          content:
+            application/json:
+              example:
+                status: failed
+                error: true
+                message: Only PDF file is allowed to upload.
+        "500":
+          description: Internal Server Error.
+          content:
+            application/json:
+              example:
+                status: failed
+                error: true
+                message: Something went wrong on the server.
+  /pdf:
+    post:
+      summary: Extract Pdf Data
+      tags:
+        - Extract Data
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+      responses:
+        "200":
+          description: Data Extracted Successfully
+          content:
+            application/json:
+              example:
+                status: success
+                error: false
+                message: Data Extracted Successfully
+                data:
+                  clauses:
+                  tables:
+                  filesPath:
+        "400":
+          description: Invalid Request.
+          content:
+            application/json:
+              example:
+                status: failed
+                error: true
+                message: Invalid request format. Please provide a valid JSON object with a 'files' key containing an array of image paths.
+        "500":
+          description: Internal Server Error.
+          content:
+            application/json:
+              example:
+                status: failed
+                error: true
+                message: Server is busy right now. Please try again later.

@@ -1,0 +1,752 @@
+{
+	"info": {
+		"_postman_id": "69e65056-93db-4c23-b8c4-50d1c521c357",
+		"name": "pdf-parser-postman-collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "14164093"
+	},
+	"item": [
+		{
+			"name": "Upload_Data_BSP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 40sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(40000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Test data type of the response\",()=>{",
+							"    pm.expect(jsonData).to.be.an(\"object\");",
+							"});",
+							"pm.test(\"Document uploaded successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Document uploaded successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 828\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('828');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/dwitidibyajyoti/Downloads/OUR_FORMAT_CONVERTED (1)/OUR_FORMAT_CONVERTED/pdf-test-BSP.pdf"
+						}
+					]
+				},
+				"url": "http://localhost:5050/api/v1/upload"
+			},
+			"response": []
+		},
+		{
+			"name": "Upload_Data_BSP_Invalid",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 45sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(45000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Test data type of the response\",()=>{",
+							"    pm.expect(jsonData).to.be.an(\"object\");",
+							"});",
+							"pm.test(\"Document uploaded successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Document uploaded successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 924\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('924');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/dwitidibyajyoti/Downloads/OUR_FORMAT_CONVERTED (1)/OUR_FORMAT_CONVERTED/pdf-test-BSP_invalid.pdf"
+						}
+					]
+				},
+				"url": "http://localhost:5050/api/v1/upload"
+			},
+			"response": []
+		},
+		{
+			"name": "Upload_Data_BSL2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 1min_30sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(90000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Test data type of the response\",()=>{",
+							"    pm.expect(jsonData).to.be.an(\"object\");",
+							"});",
+							"pm.test(\"Document uploaded successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Document uploaded successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 2524\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('2524');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/dwitidibyajyoti/Downloads/OUR_FORMAT_CONVERTED (1)/OUR_FORMAT_CONVERTED/pdf-test-BSL2.pdf"
+						}
+					]
+				},
+				"url": "http://localhost:5050/api/v1/upload"
+			},
+			"response": []
+		},
+		{
+			"name": "Upload_Data_DSP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 1min_20sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(80000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Test data type of the response\",()=>{",
+							"    pm.expect(jsonData).to.be.an(\"object\");",
+							"});",
+							"pm.test(\"Document uploaded successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Document uploaded successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 1820\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('1820');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/dwitidibyajyoti/Downloads/OUR_FORMAT_CONVERTED (1)/OUR_FORMAT_CONVERTED/pdf-test-DSP.pdf"
+						}
+					]
+				},
+				"url": "http://localhost:5050/api/v1/upload"
+			},
+			"response": []
+		},
+		{
+			"name": "Upload_Data_RSP4",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 4min_30sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(260000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Test data type of the response\",()=>{",
+							"    pm.expect(jsonData).to.be.an(\"object\");",
+							"});",
+							"pm.test(\"Document uploaded successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Document uploaded successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 6427\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('6427');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/dwitidibyajyoti/Downloads/OUR_FORMAT_CONVERTED (1)/OUR_FORMAT_CONVERTED/pdf-test-RSP4.pdf"
+						}
+					]
+				},
+				"url": "http://localhost:5050/api/v1/upload"
+			},
+			"response": []
+		},
+		{
+			"name": "Upload_Data_T.S_GWR",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 20sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(20000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Test data type of the response\",()=>{",
+							"    pm.expect(jsonData).to.be.an(\"object\");",
+							"});",
+							"pm.test(\"Document uploaded successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Document uploaded successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 572\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('572');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/dwitidibyajyoti/Downloads/OUR_FORMAT_CONVERTED (1)/OUR_FORMAT_CONVERTED/T.S-GWR.pdf"
+						}
+					]
+				},
+				"url": "http://localhost:5050/api/v1/upload"
+			},
+			"response": []
+		},
+		{
+			"name": "Upload_Data_Final_TS_943",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 15sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(15000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Test data type of the response\",()=>{",
+							"    pm.expect(jsonData).to.be.an(\"object\");",
+							"});",
+							"pm.test(\"Document uploaded successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Document uploaded successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 257\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('257');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/dwitidibyajyoti/Downloads/OUR_FORMAT_CONVERTED (1)/OUR_FORMAT_CONVERTED/pdf-test-2-Final-TS-943.pdf"
+						}
+					]
+				},
+				"url": "http://localhost:5050/api/v1/upload"
+			},
+			"response": []
+		},
+		{
+			"name": "Extract_Data_BSP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 1min_30sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(90000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Data extracted successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Data extracted successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 38697\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('38697');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"files\" : [\n                \"output/1702020248/page_1.png\",\n                \"output/1702020248/page_2.png\",\n                \"output/1702020248/page_3.png\",\n                \"output/1702020248/page_4.png\",\n                \"output/1702020248/page_5.png\",\n                \"output/1702020248/page_6.png\",\n                \"output/1702020248/page_7.png\",\n                \"output/1702020248/page_8.png\",\n                \"output/1702020248/page_9.png\",\n                \"output/1702020248/page_10.png\",\n                \"output/1702020248/page_11.png\",\n                \"output/1702020248/page_12.png\",\n                \"output/1702020248/page_13.png\",\n                \"output/1702020248/page_14.png\",\n                \"output/1702020248/page_15.png\",\n                \"output/1702020248/page_16.png\",\n                \"output/1702020248/page_17.png\",\n                \"output/1702020248/page_18.png\",\n                \"output/1702020248/page_19.png\",\n                \"output/1702020248/page_20.png\",\n                \"output/1702020248/page_21.png\",\n                \"output/1702020248/page_22.png\"\n            ]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:5050/api/v1/pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "Extract_Data_BSP_Invalid",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 500\", function () {",
+							"    pm.response.to.have.status(500);",
+							"});",
+							"pm.test(\"Status code name is Internal server error\",()=>{",
+							"    pm.response.to.have.status(\"Internal Server Error\");",
+							"});",
+							"pm.test(\"Response time is less than 1min_30sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(90000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Validation error, we found some points which are not allowed i.e I.,a\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Validation error, we found some points which are not allowed i.e I.,a)\");",
+							"});",
+							"pm.test(\"Content-Length header is 115\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('115');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"files\" : [\n                \"output/1702020568/page_1.png\",\n                \"output/1702020568/page_2.png\",\n                \"output/1702020568/page_3.png\",\n                \"output/1702020568/page_4.png\",\n                \"output/1702020568/page_5.png\",\n                \"output/1702020568/page_6.png\",\n                \"output/1702020568/page_7.png\",\n                \"output/1702020568/page_8.png\",\n                \"output/1702020568/page_9.png\",\n                \"output/1702020568/page_10.png\",\n                \"output/1702020568/page_11.png\",\n                \"output/1702020568/page_12.png\",\n                \"output/1702020568/page_13.png\",\n                \"output/1702020568/page_14.png\",\n                \"output/1702020568/page_15.png\",\n                \"output/1702020568/page_16.png\",\n                \"output/1702020568/page_17.png\",\n                \"output/1702020568/page_18.png\",\n                \"output/1702020568/page_19.png\",\n                \"output/1702020568/page_20.png\",\n                \"output/1702020568/page_21.png\",\n                \"output/1702020568/page_22.png\",\n                \"output/1702020568/page_23.png\",\n                \"output/1702020568/page_24.png\",\n                \"output/1702020568/page_25.png\"\n            ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:5050/api/v1/pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "Extract_Data_BSL2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 6min\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(360000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Data extracted successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Data extracted successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 14862\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('14862');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"files\" :[\n                \"output/1702024723/page_1.png\",\n                \"output/1702024723/page_2.png\",\n                \"output/1702024723/page_3.png\",\n                \"output/1702024723/page_4.png\",\n                \"output/1702024723/page_5.png\",\n                \"output/1702024723/page_6.png\",\n                \"output/1702024723/page_7.png\",\n                \"output/1702024723/page_8.png\",\n                \"output/1702024723/page_9.png\",\n                \"output/1702024723/page_10.png\",\n                \"output/1702024723/page_11.png\",\n                \"output/1702024723/page_12.png\",\n                \"output/1702024723/page_13.png\",\n                \"output/1702024723/page_14.png\",\n                \"output/1702024723/page_15.png\",\n                \"output/1702024723/page_16.png\",\n                \"output/1702024723/page_17.png\",\n                \"output/1702024723/page_18.png\",\n                \"output/1702024723/page_19.png\",\n                \"output/1702024723/page_20.png\",\n                \"output/1702024723/page_21.png\",\n                \"output/1702024723/page_22.png\",\n                \"output/1702024723/page_23.png\",\n                \"output/1702024723/page_24.png\",\n                \"output/1702024723/page_25.png\",\n                \"output/1702024723/page_26.png\",\n                \"output/1702024723/page_27.png\",\n                \"output/1702024723/page_28.png\",\n                \"output/1702024723/page_29.png\",\n                \"output/1702024723/page_30.png\",\n                \"output/1702024723/page_31.png\",\n                \"output/1702024723/page_32.png\",\n                \"output/1702024723/page_33.png\",\n                \"output/1702024723/page_34.png\",\n                \"output/1702024723/page_35.png\",\n                \"output/1702024723/page_36.png\",\n                \"output/1702024723/page_37.png\",\n                \"output/1702024723/page_38.png\",\n                \"output/1702024723/page_39.png\",\n                \"output/1702024723/page_40.png\",\n                \"output/1702024723/page_41.png\",\n                \"output/1702024723/page_42.png\",\n                \"output/1702024723/page_43.png\",\n                \"output/1702024723/page_44.png\",\n                \"output/1702024723/page_45.png\",\n                \"output/1702024723/page_46.png\",\n                \"output/1702024723/page_47.png\",\n                \"output/1702024723/page_48.png\",\n                \"output/1702024723/page_49.png\",\n                \"output/1702024723/page_50.png\",\n                \"output/1702024723/page_51.png\",\n                \"output/1702024723/page_52.png\",\n                \"output/1702024723/page_53.png\",\n                \"output/1702024723/page_54.png\",\n                \"output/1702024723/page_55.png\",\n                \"output/1702024723/page_56.png\",\n                \"output/1702024723/page_57.png\",\n                \"output/1702024723/page_58.png\",\n                \"output/1702024723/page_59.png\",\n                \"output/1702024723/page_60.png\",\n                \"output/1702024723/page_61.png\",\n                \"output/1702024723/page_62.png\",\n                \"output/1702024723/page_63.png\",\n                \"output/1702024723/page_64.png\",\n                \"output/1702024723/page_65.png\",\n                \"output/1702024723/page_66.png\",\n                \"output/1702024723/page_67.png\",\n                \"output/1702024723/page_68.png\",\n                \"output/1702024723/page_69.png\",\n                \"output/1702024723/page_70.png\",\n                \"output/1702024723/page_71.png\",\n                \"output/1702024723/page_72.png\",\n                \"output/1702024723/page_73.png\",\n                \"output/1702024723/page_74.png\",\n                \"output/1702024723/page_75.png\"\n            ]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:5050/api/v1/pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "Extract_Data_DSP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 8min\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(480000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Data extracted successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Data extracted successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 101627\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('101627');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"files\" : [\n                \"output/1702025524/page_1.png\",\n                \"output/1702025524/page_2.png\",\n                \"output/1702025524/page_3.png\",\n                \"output/1702025524/page_4.png\",\n                \"output/1702025524/page_5.png\",\n                \"output/1702025524/page_6.png\",\n                \"output/1702025524/page_7.png\",\n                \"output/1702025524/page_8.png\",\n                \"output/1702025524/page_9.png\",\n                \"output/1702025524/page_10.png\",\n                \"output/1702025524/page_11.png\",\n                \"output/1702025524/page_12.png\",\n                \"output/1702025524/page_13.png\",\n                \"output/1702025524/page_14.png\",\n                \"output/1702025524/page_15.png\",\n                \"output/1702025524/page_16.png\",\n                \"output/1702025524/page_17.png\",\n                \"output/1702025524/page_18.png\",\n                \"output/1702025524/page_19.png\",\n                \"output/1702025524/page_20.png\",\n                \"output/1702025524/page_21.png\",\n                \"output/1702025524/page_22.png\",\n                \"output/1702025524/page_23.png\",\n                \"output/1702025524/page_24.png\",\n                \"output/1702025524/page_25.png\",\n                \"output/1702025524/page_26.png\",\n                \"output/1702025524/page_27.png\",\n                \"output/1702025524/page_28.png\",\n                \"output/1702025524/page_29.png\",\n                \"output/1702025524/page_30.png\",\n                \"output/1702025524/page_31.png\",\n                \"output/1702025524/page_32.png\",\n                \"output/1702025524/page_33.png\",\n                \"output/1702025524/page_34.png\",\n                \"output/1702025524/page_35.png\",\n                \"output/1702025524/page_36.png\",\n                \"output/1702025524/page_37.png\",\n                \"output/1702025524/page_38.png\",\n                \"output/1702025524/page_39.png\",\n                \"output/1702025524/page_40.png\",\n                \"output/1702025524/page_41.png\",\n                \"output/1702025524/page_42.png\",\n                \"output/1702025524/page_43.png\",\n                \"output/1702025524/page_44.png\",\n                \"output/1702025524/page_45.png\",\n                \"output/1702025524/page_46.png\",\n                \"output/1702025524/page_47.png\",\n                \"output/1702025524/page_48.png\",\n                \"output/1702025524/page_49.png\",\n                \"output/1702025524/page_50.png\",\n                \"output/1702025524/page_51.png\",\n                \"output/1702025524/page_52.png\",\n                \"output/1702025524/page_53.png\"\n            ]\n        }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:5050/api/v1/pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "Extract_Data_RSP4",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 14min\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(840000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Data extracted successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Data extracted successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 167871\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('167871');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"files\" : [\n                \"output/1702026498/page_1.png\",\n                \"output/1702026498/page_2.png\",\n                \"output/1702026498/page_3.png\",\n                \"output/1702026498/page_4.png\",\n                \"output/1702026498/page_5.png\",\n                \"output/1702026498/page_6.png\",\n                \"output/1702026498/page_7.png\",\n                \"output/1702026498/page_8.png\",\n                \"output/1702026498/page_9.png\",\n                \"output/1702026498/page_10.png\",\n                \"output/1702026498/page_11.png\",\n                \"output/1702026498/page_12.png\",\n                \"output/1702026498/page_13.png\",\n                \"output/1702026498/page_14.png\",\n                \"output/1702026498/page_15.png\",\n                \"output/1702026498/page_16.png\",\n                \"output/1702026498/page_17.png\",\n                \"output/1702026498/page_18.png\",\n                \"output/1702026498/page_19.png\",\n                \"output/1702026498/page_20.png\",\n                \"output/1702026498/page_21.png\",\n                \"output/1702026498/page_22.png\",\n                \"output/1702026498/page_23.png\",\n                \"output/1702026498/page_24.png\",\n                \"output/1702026498/page_25.png\",\n                \"output/1702026498/page_26.png\",\n                \"output/1702026498/page_27.png\",\n                \"output/1702026498/page_28.png\",\n                \"output/1702026498/page_29.png\",\n                \"output/1702026498/page_30.png\",\n                \"output/1702026498/page_31.png\",\n                \"output/1702026498/page_32.png\",\n                \"output/1702026498/page_33.png\",\n                \"output/1702026498/page_34.png\",\n                \"output/1702026498/page_35.png\",\n                \"output/1702026498/page_36.png\",\n                \"output/1702026498/page_37.png\",\n                \"output/1702026498/page_38.png\",\n                \"output/1702026498/page_39.png\",\n                \"output/1702026498/page_40.png\",\n                \"output/1702026498/page_41.png\",\n                \"output/1702026498/page_42.png\",\n                \"output/1702026498/page_43.png\",\n                \"output/1702026498/page_44.png\",\n                \"output/1702026498/page_45.png\",\n                \"output/1702026498/page_46.png\",\n                \"output/1702026498/page_47.png\",\n                \"output/1702026498/page_48.png\",\n                \"output/1702026498/page_49.png\",\n                \"output/1702026498/page_50.png\",\n                \"output/1702026498/page_51.png\",\n                \"output/1702026498/page_52.png\",\n                \"output/1702026498/page_53.png\",\n                \"output/1702026498/page_54.png\",\n                \"output/1702026498/page_55.png\",\n                \"output/1702026498/page_56.png\",\n                \"output/1702026498/page_57.png\",\n                \"output/1702026498/page_58.png\",\n                \"output/1702026498/page_59.png\",\n                \"output/1702026498/page_60.png\",\n                \"output/1702026498/page_61.png\",\n                \"output/1702026498/page_62.png\",\n                \"output/1702026498/page_63.png\",\n                \"output/1702026498/page_64.png\",\n                \"output/1702026498/page_65.png\",\n                \"output/1702026498/page_66.png\",\n                \"output/1702026498/page_67.png\",\n                \"output/1702026498/page_68.png\",\n                \"output/1702026498/page_69.png\",\n                \"output/1702026498/page_70.png\",\n                \"output/1702026498/page_71.png\",\n                \"output/1702026498/page_72.png\",\n                \"output/1702026498/page_73.png\",\n                \"output/1702026498/page_74.png\",\n                \"output/1702026498/page_75.png\",\n                \"output/1702026498/page_76.png\",\n                \"output/1702026498/page_77.png\",\n                \"output/1702026498/page_78.png\",\n                \"output/1702026498/page_79.png\",\n                \"output/1702026498/page_80.png\",\n                \"output/1702026498/page_81.png\",\n                \"output/1702026498/page_82.png\",\n                \"output/1702026498/page_83.png\",\n                \"output/1702026498/page_84.png\",\n                \"output/1702026498/page_85.png\",\n                \"output/1702026498/page_86.png\",\n                \"output/1702026498/page_87.png\",\n                \"output/1702026498/page_88.png\",\n                \"output/1702026498/page_89.png\",\n                \"output/1702026498/page_90.png\",\n                \"output/1702026498/page_91.png\",\n                \"output/1702026498/page_92.png\",\n                \"output/1702026498/page_93.png\",\n                \"output/1702026498/page_94.png\",\n                \"output/1702026498/page_95.png\",\n                \"output/1702026498/page_96.png\",\n                \"output/1702026498/page_97.png\",\n                \"output/1702026498/page_98.png\",\n                \"output/1702026498/page_99.png\",\n                \"output/1702026498/page_100.png\",\n                \"output/1702026498/page_101.png\",\n                \"output/1702026498/page_102.png\",\n                \"output/1702026498/page_103.png\",\n                \"output/1702026498/page_104.png\",\n                \"output/1702026498/page_105.png\",\n                \"output/1702026498/page_106.png\",\n                \"output/1702026498/page_107.png\",\n                \"output/1702026498/page_108.png\",\n                \"output/1702026498/page_109.png\",\n                \"output/1702026498/page_110.png\",\n                \"output/1702026498/page_111.png\",\n                \"output/1702026498/page_112.png\",\n                \"output/1702026498/page_113.png\",\n                \"output/1702026498/page_114.png\",\n                \"output/1702026498/page_115.png\",\n                \"output/1702026498/page_116.png\",\n                \"output/1702026498/page_117.png\",\n                \"output/1702026498/page_118.png\",\n                \"output/1702026498/page_119.png\",\n                \"output/1702026498/page_120.png\",\n                \"output/1702026498/page_121.png\",\n                \"output/1702026498/page_122.png\",\n                \"output/1702026498/page_123.png\",\n                \"output/1702026498/page_124.png\",\n                \"output/1702026498/page_125.png\",\n                \"output/1702026498/page_126.png\",\n                \"output/1702026498/page_127.png\",\n                \"output/1702026498/page_128.png\",\n                \"output/1702026498/page_129.png\",\n                \"output/1702026498/page_130.png\",\n                \"output/1702026498/page_131.png\",\n                \"output/1702026498/page_132.png\",\n                \"output/1702026498/page_133.png\",\n                \"output/1702026498/page_134.png\",\n                \"output/1702026498/page_135.png\",\n                \"output/1702026498/page_136.png\",\n                \"output/1702026498/page_137.png\",\n                \"output/1702026498/page_138.png\",\n                \"output/1702026498/page_139.png\",\n                \"output/1702026498/page_140.png\",\n                \"output/1702026498/page_141.png\",\n                \"output/1702026498/page_142.png\",\n                \"output/1702026498/page_143.png\",\n                \"output/1702026498/page_144.png\",\n                \"output/1702026498/page_145.png\",\n                \"output/1702026498/page_146.png\",\n                \"output/1702026498/page_147.png\",\n                \"output/1702026498/page_148.png\",\n                \"output/1702026498/page_149.png\",\n                \"output/1702026498/page_150.png\",\n                \"output/1702026498/page_151.png\",\n                \"output/1702026498/page_152.png\",\n                \"output/1702026498/page_153.png\",\n                \"output/1702026498/page_154.png\",\n                \"output/1702026498/page_155.png\",\n                \"output/1702026498/page_156.png\",\n                \"output/1702026498/page_157.png\",\n                \"output/1702026498/page_158.png\",\n                \"output/1702026498/page_159.png\",\n                \"output/1702026498/page_160.png\",\n                \"output/1702026498/page_161.png\",\n                \"output/1702026498/page_162.png\",\n                \"output/1702026498/page_163.png\",\n                \"output/1702026498/page_164.png\",\n                \"output/1702026498/page_165.png\",\n                \"output/1702026498/page_166.png\",\n                \"output/1702026498/page_167.png\",\n                \"output/1702026498/page_168.png\",\n                \"output/1702026498/page_169.png\",\n                \"output/1702026498/page_170.png\",\n                \"output/1702026498/page_171.png\",\n                \"output/1702026498/page_172.png\",\n                \"output/1702026498/page_173.png\",\n                \"output/1702026498/page_174.png\",\n                \"output/1702026498/page_175.png\",\n                \"output/1702026498/page_176.png\",\n                \"output/1702026498/page_177.png\",\n                \"output/1702026498/page_178.png\",\n                \"output/1702026498/page_179.png\",\n                \"output/1702026498/page_180.png\",\n                \"output/1702026498/page_181.png\",\n                \"output/1702026498/page_182.png\",\n                \"output/1702026498/page_183.png\",\n                \"output/1702026498/page_184.png\",\n                \"output/1702026498/page_185.png\",\n                \"output/1702026498/page_186.png\",\n                \"output/1702026498/page_187.png\",\n                \"output/1702026498/page_188.png\",\n                \"output/1702026498/page_189.png\",\n                \"output/1702026498/page_190.png\",\n                \"output/1702026498/page_191.png\",\n                \"output/1702026498/page_192.png\",\n                \"output/1702026498/page_193.png\",\n                \"output/1702026498/page_194.png\"\n            ]\n        }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:5050/api/v1/pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "Extract_Data_T.S_GWR",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 1min\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(60000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Data extracted successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Data extracted successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 17617\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('17617');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"files\" : [\n                \"output/1702028000/page_1.png\",\n                \"output/1702028000/page_2.png\",\n                \"output/1702028000/page_3.png\",\n                \"output/1702028000/page_4.png\",\n                \"output/1702028000/page_5.png\",\n                \"output/1702028000/page_6.png\",\n                \"output/1702028000/page_7.png\",\n                \"output/1702028000/page_8.png\",\n                \"output/1702028000/page_9.png\",\n                \"output/1702028000/page_10.png\",\n                \"output/1702028000/page_11.png\",\n                \"output/1702028000/page_12.png\",\n                \"output/1702028000/page_13.png\",\n                \"output/1702028000/page_14.png\"\n            ]\n        }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:5050/api/v1/pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "Extract_Data_Final-TS-943",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 20sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(20000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Data extracted successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Data extracted successfully\");",
+							"});",
+							"pm.test(\"Content-Length header is 4874\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('4874');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"files\" : [\n                \"output/1702028341/page_1.png\",\n                \"output/1702028341/page_2.png\",\n                \"output/1702028341/page_3.png\",\n                \"output/1702028341/page_4.png\"\n            ]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:5050/api/v1/pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "New Request Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 5sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Data updated successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Data updated successfully\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"content\":\"test\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5050/api/v1/pdf/26b24dd4-8491-477d-8a44-e897a7db89fc?clause=1.1.",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5050",
+					"path": [
+						"api",
+						"v1",
+						"pdf",
+						"26b24dd4-8491-477d-8a44-e897a7db89fc"
+					],
+					"query": [
+						{
+							"key": "clause",
+							"value": "1.1."
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check_Patched_Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Status code name is OK\",()=>{",
+							"    pm.response.to.have.status(\"OK\");",
+							"});",
+							"pm.test(\"Response time is less than 5sec\",()=>{",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.test(\"Pdf data fetched successfully\",()=>{",
+							"    pm.expect(jsonData.message).to.be.eql(\"Pdf data fetched successfully\");",
+							"});",
+							"pm.test(\"Content-1.1:'test'\",()=>{",
+							"    pm.expect(jsonData.pdf.data[\"1.1.\"]).to.be.eql(\"test\");",
+							"});",
+							"pm.test(\"Content-Length header is 16220\",()=>{",
+							"    pm.expect(pm.response.headers.get('Content-Length')).to.eql('16220');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:5050/api/v1/pdf/26b24dd4-8491-477d-8a44-e897a7db89fc"
+			},
+			"response": []
+		}
+	]
+}
