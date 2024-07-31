@@ -88,7 +88,7 @@ function App() {
     fd.append("file", file);
 
     try {
-      const res = await axios.post("http://172.25.2.145:5050/api/v1/upload", fd, {
+      const res = await axios.post("http://localhost:5050/api/v1/upload", fd, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -121,13 +121,13 @@ function App() {
 
   const handleUpdate = async () => {
     await axios.patch(
-      `http://172.25.2.145:5050/api/v1/pdf/${clauseId}?clause=${clause}`,
+      `http://localhost:5050/api/v1/pdf/${clauseId}?clause=${clause}`,
       {
         content: content,
       }
     );
 
-    const res = await axios.get(`http://172.25.2.145:5050/api/v1/pdf/${clauseId}`);
+    const res = await axios.get(`http://localhost:5050/api/v1/pdf/${clauseId}`);
 
     console.log(res.data);
 
@@ -145,11 +145,11 @@ function App() {
   async function handleTableUpdate() {
     // console.log(JSON.parse(updatedTable));
 
-    await axios.patch(`http://172.25.2.145:5050/api/v1/pdf/${clauseId}`, {
+    await axios.patch(`http://localhost:5050/api/v1/pdf/${clauseId}`, {
       tableContent: updatedTable,
     });
 
-    const res = await axios.get(`http://172.25.2.145:5050/api/v1/pdf/${clauseId}`);
+    const res = await axios.get(`http://localhost:5050/api/v1/pdf/${clauseId}`);
 
     console.log(res.data);
 
@@ -160,7 +160,7 @@ function App() {
   }
   useEffect(() => {
     if (documentImages.length != 0) {
-      setSocketUrl('ws://172.25.2.145:8082');
+      setSocketUrl('ws://localhost:8082');
 
       const connectionStatus = {
         [ReadyState.CONNECTING]: 'Connecting',

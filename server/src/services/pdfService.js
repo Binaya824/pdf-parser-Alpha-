@@ -74,6 +74,7 @@ class PdfTextExtractor {
         // Set up the results structure and other flags
         const result = {};
         let currentPoint = '';
+        let currentSubPoint = '';
         let tableEncountered = false;
         let clauseStarted = false;
         let stopExtracting = false;
@@ -133,6 +134,7 @@ class PdfTextExtractor {
 
                 const doc = nlp.readDoc(t);
                 const tokens = doc.sentences().out();
+                console.log("tokens" , tokens)
                 let cleanedText = '';
                 let isInsideDoubleHash = false;
                 let ignoreToken = false
@@ -141,7 +143,7 @@ class PdfTextExtractor {
                 tokens.forEach((token) => {
 
                     const tableMatch = token.match(/\bTABLE\b|\b\(TABLE\)\b/g);
-                    console.log("token =============================================>>>>>>>>>>>>>>>>>>>>>>>>>" , token)
+                    // console.log("token =============================================>>>>>>>>>>>>>>>>>>>>>>>>>" , token)
 
                     // let indexOfTableKeyword = token.indexOf("(TABLE")
 
@@ -184,7 +186,7 @@ class PdfTextExtractor {
                         // delete result[currentPoint];
                     }
                     tableIndices.forEach((index)=> {
-                                const text = result[index];
+                                const text = result[index]["content"];
                                 // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" , text)
                                 let indexOfTableKeyword = text.indexOf("TABLE")
                                     if (indexOfTableKeyword === -1) {
@@ -202,10 +204,10 @@ class PdfTextExtractor {
                                     // console.log("refered content ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" , referedContent)
                                     // .concat(' ', referedContent);
                                     if(referLinkIndex != -1 && clauseStarted){
-                                        result[index] = text.substring(0, indexOfTableKeyword + 5).concat(" " , referedContent).replace("(TABLE", "(TABLE)")
+                                        result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).concat(" " , referedContent).replace("(TABLE", "(TABLE)")
                                     }else if(clauseStarted){
             
-                                        result[index] = text.substring(0, indexOfTableKeyword + 5).replace("(TABLE", "(TABLE)")
+                                        result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).replace("(TABLE", "(TABLE)")
                                     }
                                 })
 
@@ -222,15 +224,22 @@ class PdfTextExtractor {
                         /^(?:\d+(\.\d+)*\.$|\*\*End of Clauses\*\*)$/
                     );
 
+                    const subPointMatch = token.match(/(?:^|\s)([^\s\)]\)) (.+?)(?=(?:\n\s*)[^\s\)]\)|$)/gs);
+                    
+                    if(subPointMatch){
+                        currentSubPoint = subPointMatch[0].trim().substring(0 ,2).replace(/(\b1\))\s*/g, 'i) ').replace(/(\bI\))\s*/g, 'l) ')
+                    }
+
                     if (pointMatch && !stopExtracting && !isInsideDoubleHash) {
+                        console.log("____________________________)))))))))))))))))))))))))))))) pointmatch" , pointMatch)
                         if (Object.hasOwn(result, pointMatch[0])) {
                             cleanedText = pointMatch[0];
-                            result[currentPoint] = (result[currentPoint] || []).concat(cleanedText);
+                            result[currentPoint]["content"] = (result[currentPoint]["content"]).concat(cleanedText);
                         } else {
                             tableEncountered = false;
                             currentPoint = pointMatch[0];
-
-                            result[currentPoint] = "";
+                            currentSubPoint = ""
+                            result[currentPoint] = {"content": "" , "sequence" : {}};
                         }
                         // console.log(currentPoint)
                     } else if (tokenSeparated && !isInsideDoubleHash) {
@@ -249,7 +258,7 @@ class PdfTextExtractor {
 
                             let separatedTokenMatch;
 
-                            if (Object.keys(result).length === 1 && Object.values(result)[0] === 'INTRODUCTION ') {
+                            if (Object.keys(result).length === 1 && Object.values(result)[0]["content"] === 'INTRODUCTION ') {
                                 separatedTokenMatch = separatedToken.match(
                                     /^(?:\d+(\.\d+)*\.$|\*\*End of Clauses\*\*)$/
                                 );
@@ -286,11 +295,18 @@ class PdfTextExtractor {
                             ) {
                                 // tableEncountered = false;
                                 currentPoint = separatedTokenMatch[0];
-                                result[currentPoint] = "";
-                            } else if (currentPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash) {
+                                currentSubPoint = "";
+                                result[currentPoint] = {"content": "" , "sequence" : {}};
+                            } else if (currentPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !currentSubPoint) {
                                 cleanedText = separatedToken.replace(/\s+/g, " ").trim();
-                                result[currentPoint] += cleanedText + " ";
+                                console.log("*************************************************************************************" , cleanedText)
+                                result[currentPoint]["content"] += cleanedText + " ";
+                            }else if(currentSubPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !pointMatch){
+                                cleanedText = separatedToken.replace(/\s+/g, " ").trim();
+                                console.log("************************************************************************************* subContent" , cleanedText)
+                                result[currentPoint]["sequence"][currentSubPoint] = result[currentPoint]["sequence"][currentSubPoint] ? result[currentPoint]["sequence"][currentSubPoint].replace(/[^\s\)]\)\s*/, '').trim() + cleanedText + " " : cleanedText + " ";
                             }
+                            // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" , currentSubPoint)
 
                             ignoreToken = false
                             if (!clauseStarted) {
@@ -318,9 +334,9 @@ class PdfTextExtractor {
                     throw new Error(`Validation error, we found some points which are not allowed i.e ${nonValidatedPoints.join(",")}`);
                 }
 
-                for (const key in result) {
-                    result[key] = result[key].trim();
-                }
+                // for (const key in result) {
+                //     result[key]["content"] = result[key]["content"].trim();
+                // }
             });
 
             // if (result.hasOwnProperty("1.")) {
@@ -348,7 +364,7 @@ class PdfTextExtractor {
             //         console.error(error);
             //     }
             // })
-            console.log(result)
+            console.log(JSON.stringify(result , null , 2))
             console.log("table indices ================>" , tableIndices)
             if (ws != '') {
                 ws.send(JSON.stringify({ type: 'progress_data', data: result }));
@@ -361,7 +377,7 @@ class PdfTextExtractor {
             // Now, you can also check if the value associated with "1." is "INTRODUCTION"
             const ifIntroductionExistsRegex = /INTRODUCTION/g
 
-            const ifIntroductionExists = ifIntroductionExistsRegex.test(result["1."])
+            const ifIntroductionExists = ifIntroductionExistsRegex.test(result["1."]["content"])
 
             if (!ifIntroductionExists) {
                 throw new Error(`Validation error, The first entry should be  '1. INTRODUCTION'`);

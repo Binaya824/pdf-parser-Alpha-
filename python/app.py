@@ -14,8 +14,10 @@ async def websocket_handler(websocket, path):
             response = []
             if(parsed_data['type'] == 'extract_table'):
                 objExtractTable = extractTable(parsed_data,websocket)
+                # print("-----------------------------------------------------> " , objExtractTable)
                 extractTableResult = await objExtractTable.extract_table_multiprocessor()
                 response = extractTableResult
+                print("object extracted============================================================================:::::::::::>>>>>>>>>>" , response)
                 
             else:
                 response = {}

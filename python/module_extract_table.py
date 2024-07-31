@@ -175,6 +175,22 @@ def get_tables_data(path):
 #   print(table_data,flush=True)
   return table_data[::-1]
 
+def assign_missing_identifiers(data):
+    last_identifier = None
+
+    for page_data in data:
+        for table_data in page_data['table']:
+            if not table_data['table']:  # Skip if the table is empty
+                continue
+
+            if 'table_identifier' in table_data and table_data['table_identifier']:
+                # If the current table has an identifier, store it as the last known identifier
+                last_identifier = table_data['table_identifier']
+            elif last_identifier:
+                # If the current table does not have an identifier, use the last known one
+                table_data['table_identifier'] = last_identifier
+
+    return data
 
 
 class extractTable:
@@ -195,6 +211,7 @@ class extractTable:
 
                 for result in pool.imap(extract_table, self.parsed_data['tables']):
                     results.append(result)
+                    data = assign_missing_identifiers(results)
                     completed_tasks += 1
                     progress_percentage = (completed_tasks / total_tasks) * 100
                     await self.websocket.send(json.dumps({'type':'progress','message':f"Progress: {progress_percentage:.2f}% ({completed_tasks} / {total_tasks} jobs completed)",'progress':f"{progress_percentage:.2f}",'task':{'total':total_tasks,'completed':completed_tasks}}))
@@ -205,10 +222,10 @@ class extractTable:
                 pool.close()
                 pool.join()
         # Now, 'results' contains the processed data for each image
-        tables = results
+        tables = data
         
         response = self.saveToDb(tables)
-        return response;
+        return response
     
     
     def saveToDb(self,data_to_insert):

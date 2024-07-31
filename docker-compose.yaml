@@ -33,21 +33,21 @@ services:
   #   logging:
   #     driver: none
 
-  client:
-    build:
-      context: "./client"
-      dockerfile: Dockerfile
-    ports:
-      - 5173:5173
-    container_name: client
-    networks:
-      - mjunction
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    depends_on:
-      # - db
-      - server
+  # client:
+  #   build:
+  #     context: "./client"
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 5173:5173
+  #   container_name: client
+  #   networks:
+  #     - mjunction
+  #   volumes:
+  #     - ./client:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     # - db
+  #     - server
 
   server:
     build:
