@@ -78,9 +78,16 @@ class PdfTextExtractor {
         let tableEncountered = false;
         let clauseStarted = false;
         let stopExtracting = false;
-        const nonValidatedPoints = [];
+        // const nonValidatedPoints = [];
         let progress = 0; // Track the number of files processed
         let tableIndices = [];
+        let isValidationError = false;
+        let validationErrorInfo = {
+            nonValidatedPoints: [],
+            errorPages: [],
+            errorPoint: [],
+            error: false
+        }
 
         const trackProgress = (() => {
             const startTime = performance.now()
@@ -130,7 +137,7 @@ class PdfTextExtractor {
 
             const texts = await Promise.all(promises);
 
-            texts.forEach((t) => {
+            texts.forEach((t , textsIndex) => {
 
                 const doc = nlp.readDoc(t);
                 const tokens = doc.sentences().out();
@@ -185,31 +192,33 @@ class PdfTextExtractor {
                         // tableString = ""
                         // delete result[currentPoint];
                     }
-                    tableIndices.forEach((index)=> {
-                                const text = result[index]["content"];
-                                // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" , text)
-                                let indexOfTableKeyword = text.indexOf("TABLE")
-                                    if (indexOfTableKeyword === -1) {
-                                        indexOfTableKeyword = text.indexOf("(TABLE");
-                                    }
-                                    // console.log(index , "index of table key word ======================================================" , indexOfTableKeyword)
-                                    // const textSeparated = text.split(' ');
-                                    // textSeparated.forEach((el , index)=>{
-                                    //     console.log("element $$$$$$$$$$$$$$$$$" , el)
-                                    // })
+                    // tableIndices.forEach((index)=> {
+                    //             const text = result[index]["content"];
+                    //             // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" , text)
+                    //             let indexOfTableKeyword = text.indexOf("TABLE")
+                    //                 if (indexOfTableKeyword === -1) {
+                    //                     indexOfTableKeyword = text.indexOf("(TABLE");
+                    //                 }
+                    //                 // console.log(index , "index of table key word ======================================================" , indexOfTableKeyword)
+                    //                 // const textSeparated = text.split(' ');
+                    //                 // textSeparated.forEach((el , index)=>{
+                    //                 //     console.log("element $$$$$$$$$$$$$$$$$" , el)
+                    //                 // })
             
-                                    const referLinkIndex = text.indexOf("*")
-                                    // console.log("referLinkIndex-------------------------->>>>>>>>>>>>>>>"  , referLinkIndex)
-                                    const referedContent = text.substring(referLinkIndex , text.length);
-                                    // console.log("refered content ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" , referedContent)
-                                    // .concat(' ', referedContent);
-                                    if(referLinkIndex != -1 && clauseStarted){
-                                        result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).concat(" " , referedContent).replace("(TABLE", "(TABLE)")
-                                    }else if(clauseStarted){
+                    //                 const referLinkIndex = text.indexOf("*")
+                    //                 // console.log("referLinkIndex-------------------------->>>>>>>>>>>>>>>"  , referLinkIndex)
+                    //                 const referedContent = text.substring(referLinkIndex , text.length);
+                    //                 // console.log("refered content ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" , referedContent)
+                    //                 // .concat(' ', referedContent);
+                    //                 if(referLinkIndex != -1 && clauseStarted){
+                    //                     result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).concat(" " , referedContent).replace("(TABLE", "(TABLE)")
+                    //                 }else if(clauseStarted){
             
-                                        result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).replace("(TABLE", "(TABLE)")
-                                    }
-                                })
+                    //                     result[index]["content"] = text
+                    //                     // result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).replace("(TABLE", "(TABLE)")
+
+                    //                 }
+                    //             })
 
 
                     const introductionMatch = token.match(/INTRODUCTION/g);
@@ -234,7 +243,7 @@ class PdfTextExtractor {
                         console.log("____________________________)))))))))))))))))))))))))))))) pointmatch" , pointMatch)
                         if (Object.hasOwn(result, pointMatch[0])) {
                             cleanedText = pointMatch[0];
-                            result[currentPoint]["content"] = (result[currentPoint]["content"]).concat(cleanedText);
+                            result[currentPoint]["content"] = (result[currentPoint]["content"]? result[currentPoint]["content"]: "").concat(cleanedText);
                         } else {
                             tableEncountered = false;
                             currentPoint = pointMatch[0];
@@ -252,7 +261,15 @@ class PdfTextExtractor {
                                 const validationPoints = this.validate(separatedToken);
                                 if (validationPoints) {
                                     console.log('Non validated points--', validationPoints[0]);
-                                    nonValidatedPoints.push(validationPoints[0]);
+                                    console.log("error page -)()()()()()()()()()()()()()()()()()(" , chunk[textsIndex] , "errorPoint" , currentPoint)
+                                    validationErrorInfo.nonValidatedPoints.push(validationPoints[0]);
+                                    validationErrorInfo.errorPages.push(chunk[textsIndex].split("/")[2]);
+                                    validationErrorInfo.errorPoint.push(currentPoint);
+                                    validationErrorInfo.error = true;
+                                    // nonValidatedPoints.push({validationPoints:validationPoints[0] , textsIndex});
+                                    isValidationError = true;
+                                }else{
+                                    isValidationError = false;
                                 }
                             }
 
@@ -269,22 +286,23 @@ class PdfTextExtractor {
                             // console.log({ separatedTokenMatch: separatedToken.match(/^\d+(\.\d+)+(\.)+$|\\End of Clauses\\$/) })
 
                             if (
-                                separatedToken.match(/^(\*\*End of Clauses(\*\*|™™\*{0,2}|™\*{1,2})|“\*End of clauses™|\*\*¥\*% End of clauses \*\*\*|\*\*¥\* End of clauses \*\*\*)$/
-                            )
-                            ) {
+                                separatedToken === "**End of Clauses**" ||
+                                separatedToken === "**End of Clauses™**" || separatedToken === "**End of Clauses™*" || separatedToken === "***End of Clauses***" ||
+                                separatedToken === "“*End of clauses™" || separatedToken === "**¥*% End of clauses ***" || separatedToken === "**¥* End of clauses ***"
+                        ) {
                                 stopExtracting = true;
                             }
 
-                            if (separatedToken.startsWith("##") && separatedToken.endsWith("#")) {
+                            if ((separatedToken.startsWith("##") && separatedToken.endsWith("#")) || (separatedToken.startsWith("BH") && separatedToken.endsWith("##")) || (separatedToken.startsWith("##") && separatedToken.endsWith("Ht"))) {
                                 ignoreToken = true
                             }
 
-                            if (separatedToken.startsWith("H#") || separatedToken.startsWith("#H#") || separatedToken.startsWith("##")) {
+                            if (separatedToken.startsWith("H#") || separatedToken.startsWith("#H#") || separatedToken.startsWith("##") || separatedToken.startsWith("HH") || separatedToken.startsWith("##H") || separatedToken.startsWith("#H") ) {
                                 isInsideDoubleHash = !isInsideDoubleHash;
                             }
 
-                            if (separatedToken.endsWith("#i#") || separatedToken.endsWith("##") || separatedToken.endsWith("#H#")) {
-                                isInsideDoubleHash = !isInsideDoubleHash;
+                            if (separatedToken.endsWith("#i#") || separatedToken.endsWith("##") || separatedToken.endsWith("#H#") || separatedToken.endsWith("Ht") || separatedToken.endsWith("#*") || separatedToken.endsWith("HH") || separatedToken.endsWith("#F") || separatedToken.endsWith("#¥")) {
+                                isInsideDoubleHash = !isInsideDoubleHash
                                 ignoreToken = true
                             }
 
@@ -295,13 +313,14 @@ class PdfTextExtractor {
                             ) {
                                 // tableEncountered = false;
                                 currentPoint = separatedTokenMatch[0];
+                                console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! separated current point" , currentPoint)
                                 currentSubPoint = "";
                                 result[currentPoint] = {"content": "" , "sequence" : {}};
-                            } else if (currentPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !currentSubPoint) {
+                            } else if (currentPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !currentSubPoint && !isValidationError) {
                                 cleanedText = separatedToken.replace(/\s+/g, " ").trim();
                                 console.log("*************************************************************************************" , cleanedText)
                                 result[currentPoint]["content"] += cleanedText + " ";
-                            }else if(currentSubPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !pointMatch){
+                            }else if(currentSubPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !pointMatch && !isValidationError){
                                 cleanedText = separatedToken.replace(/\s+/g, " ").trim();
                                 console.log("************************************************************************************* subContent" , cleanedText)
                                 result[currentPoint]["sequence"][currentSubPoint] = result[currentPoint]["sequence"][currentSubPoint] ? result[currentPoint]["sequence"][currentSubPoint].replace(/[^\s\)]\)\s*/, '').trim() + cleanedText + " " : cleanedText + " ";
@@ -328,11 +347,18 @@ class PdfTextExtractor {
                 // }
 
                 // At the end of processing each file:
-                if (nonValidatedPoints.length) {
-                    this.ClausePages = [];
-                    console.log(`Validation error, we found some points which are not allowed i.e ${nonValidatedPoints.join(",")}`)
-                    throw new Error(`Validation error, we found some points which are not allowed i.e ${nonValidatedPoints.join(",")}`);
-                }
+                // if (nonValidatedPoints.length) {
+                //     // this.ClausePages = [];
+                //     console.log("error in chunk is " , chunk , "token index is" , nonValidatedPoints , "current point: " , currentPoint)
+                //     const errorPages = nonValidatedPoints.map((el)=> chunk[el.textsIndex])
+                //     validationErrorInfo = {
+                //         errorPages,
+                //         nonValidatedPoints,
+                //         errorPoint: currentPoint
+                //     }
+                    console.log("validationErrorInfo &^&^&^&^&^&^&^&^&^&^&^&^&^" , JSON.stringify(validationErrorInfo , null , 2))
+                //     // throw new Error(`Validation error, we found some points which are not allowed i.e ${nonValidatedPoints.join(",")}`);
+                // }
 
                 // for (const key in result) {
                 //     result[key]["content"] = result[key]["content"].trim();
@@ -364,6 +390,41 @@ class PdfTextExtractor {
             //         console.error(error);
             //     }
             // })
+
+
+            tableIndices.forEach((index)=> {
+                if(result[index]){
+                    
+                    const text = result[index]["content"];
+                    // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" , text)
+                    let indexOfTableKeyword = text.indexOf("TABLE")
+                        if (indexOfTableKeyword === -1) {
+                            indexOfTableKeyword = text.indexOf("(TABLE");
+                        }
+                        // console.log(index , "index of table key word ======================================================" , indexOfTableKeyword)
+                        // const textSeparated = text.split(' ');
+                        // textSeparated.forEach((el , index)=>{
+                        //     console.log("element $$$$$$$$$$$$$$$$$" , el)
+                        // })
+    
+                        const referLinkIndex = text.indexOf("*")
+                        // console.log("referLinkIndex-------------------------->>>>>>>>>>>>>>>"  , referLinkIndex)
+                        const referedContent = text.substring(referLinkIndex , text.length);
+                        // console.log("refered content ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" , referedContent)
+                        // .concat(' ', referedContent);
+                        if(referLinkIndex != -1 && clauseStarted){
+                            result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).concat(" " , referedContent).replace("(TABLE", "(TABLE)")
+                        }else if(clauseStarted){
+    
+                            // result[index]["content"] = text
+                            result[index]["content"] = text.substring(0, indexOfTableKeyword + 5).replace("(TABLE", "(TABLE)")
+    
+                        }
+                }
+            })
+
+
+
             console.log(JSON.stringify(result , null , 2))
             console.log("table indices ================>" , tableIndices)
             if (ws != '') {
@@ -383,7 +444,7 @@ class PdfTextExtractor {
                 throw new Error(`Validation error, The first entry should be  '1. INTRODUCTION'`);
             }
         } else {
-            throw new Error(`Validation error, the document does not comply with our validation rule.`);
+            throw new Error(`Validation Error: The document is either missing headers and footers, causing issues with cropping the introduction, or it does not meet our validation criteria. Please ensure that the document includes the required headers and footers and complies with the specified validation rules.`);
         }
 
         // Process each file
@@ -399,7 +460,7 @@ class PdfTextExtractor {
             }
         })
         await scheduler.terminate();
-        return result
+        return {result , validationErrorInfo}
     };
 
     async extractImagesFromPdf(filePath) {

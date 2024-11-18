@@ -42,41 +42,60 @@ def get_table_bounding_box(image):
     main_image = Image.open(image).convert("RGB")
     tables = image_table.extract_tables()
     ocr_data = []
+    
     for table in tables:
         bounding_boxes = {
-        "left": table.bbox.x1,
-        "top": table.bbox.y1, 
-        "right": table.bbox.x2,
-        "bottom": table.bbox.y2
+            "left": table.bbox.x1,
+            "top": table.bbox.y1, 
+            "right": table.bbox.x2,
+            "bottom": table.bbox.y2
         }
         table_identifier = {}
-        cropped_image = main_image.crop([bounding_boxes['left'],bounding_boxes['top'],bounding_boxes['right'],bounding_boxes['bottom']])
-        cropped_image2 = main_image.crop([0,0,main_image.width,bounding_boxes['top']])
-        image_array = np.array(cropped_image2)
-        gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
-        extracted_text_above_table = pytesseract.image_to_string(gray, config='--oem 3 --psm 6')
-        # print(extracted_text_above_table)
+
+        # Check if bounding_boxes['top'] is within the image height
+        if bounding_boxes['top'] > main_image.height:
+            print(f"Warning: Bounding box top ({bounding_boxes['top']}) exceeds image height ({main_image.height})")
+            continue  # Skip processing if top coordinate is out of bounds
+
+        # Crop image above the table for extracting text
+        cropped_image2 = main_image.crop([0, 0, main_image.width, bounding_boxes['top']]).convert("RGB")
+        
+        # Skip if cropped image has zero width or height
+        if cropped_image2.width == 0 or cropped_image2.height == 0:
+            print("Warning: Cropped image has zero width or height. Skipping.")
+            continue
+
+        image_array2 = np.array(cropped_image2)
+
+        # Assert to ensure dtype is uint8
+        assert image_array2.dtype == np.uint8, "Expected uint8 data type for image array"
+        
+        # Convert to grayscale
+        gray_above = cv2.cvtColor(image_array2, cv2.COLOR_BGR2GRAY)
+        
+        # OCR for text above the table
+        extracted_text_above_table = pytesseract.image_to_string(gray_above, config='--oem 3 --psm 6')
         lines = extracted_text_above_table.splitlines()
         
-        for i,text in enumerate(reversed(lines)):
-          if re.match(r'^\d+\..*\.?$', text):
-            sliced_list = lines[::-1][:i+1]
-            merged_line = ''.join(sliced_list[::-1])
-            pattern = re.compile(r'^(\d+(\.\d+)*\.)\s*(.*)$')
-            # Match the pattern in the merged line
-            match_text = pattern.match(merged_line)
-            if match_text:
-              key = match_text.group(1)
-              value = match_text.group(3)
-              table_identifier = {'key': key, 'value': value}
-            # print(result_dict)
-            break
-        # print(lines)
-        image_array = np.array(cropped_image)
-        gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
-        extracted_text = pytesseract.image_to_string(gray,config='— oem 3 — psm 10',lang='eng')
-        # ocr_data.append({"word": extracted_text, "bounding_box": bounding_boxes,"table":True})
-        ocr_data.append({"word": extracted_text, "bounding_box": bounding_boxes,"table":True,"table_identifier":table_identifier})
+        for i, text in enumerate(reversed(lines)):
+            if re.match(r'^\d+\..*\.?$', text):
+                sliced_list = lines[::-1][:i + 1]
+                merged_line = ''.join(sliced_list[::-1])
+                pattern = re.compile(r'^(\d+(\.\d+)*\.)\s*(.*)$')
+                match_text = pattern.match(merged_line)
+                if match_text:
+                    key = match_text.group(1)
+                    value = match_text.group(3)
+                    table_identifier = {'key': key, 'value': value}
+                break
+        
+        # Append OCR data with table identifier
+        ocr_data.append({
+            "word": extracted_text_above_table, 
+            "bounding_box": bounding_boxes,
+            "table": True,
+            "table_identifier": table_identifier
+        })
 
     return ocr_data
     
@@ -177,6 +196,7 @@ def get_tables_data(path):
 
 def assign_missing_identifiers(data):
     last_identifier = None
+   
 
     for page_data in data:
         for table_data in page_data['table']:
@@ -203,6 +223,7 @@ class extractTable:
     
     
     async def  extract_table_multiprocessor(self):
+        data = []
         num_processes = max(1, round(cpu_count()/2))
         with Pool(processes=num_processes) as pool:
                 results = []

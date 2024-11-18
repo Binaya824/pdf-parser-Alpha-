@@ -2,13 +2,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN yarn global add pm2 nodemon dotenv
+RUN npm install -g pm2 nodemon dotenv
 
 COPY package.json ./
 
-COPY yarn.lock ./
+RUN npm install
 
-RUN yarn
+RUN npm install yamljs
 
 COPY . .
 

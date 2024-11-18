@@ -155,7 +155,7 @@ export const extractDataAndUploadToDBApi = catchAsync(
     // let data;
     let table;
     let tables;
-    let clauses;
+    let extractedData;
     let filesPath;
 
     const pdfTextExtractor = new PdfTextExtractor();
@@ -189,7 +189,7 @@ export const extractDataAndUploadToDBApi = catchAsync(
       //   });
       // }
 
-      clauses = await pdfTextExtractor.processFiles(files);
+      extractedData = await pdfTextExtractor.processFiles(files);
 
       table = await pdfTextExtractor.extractTableFromPdf();
       // console.log(`table`, table.data);
@@ -217,13 +217,16 @@ export const extractDataAndUploadToDBApi = catchAsync(
     res.status(200).json({
       status: "success",
       error: false,
-      message: "Data extracted successfully",
+      message: extractedData.validationErrorInfo.error 
+        ? `Data extracted successfully: ${"validation Error Info : " + JSON.stringify(extractedData.validationErrorInfo , null , 2)}` 
+        : "Data extracted successfully",
       data: {
-        clauses,
+        clauses: extractedData.result,
         tables,
         filesPath,
       },
     });
+    
   }
 );
 

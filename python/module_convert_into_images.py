@@ -37,49 +37,69 @@ from uuid import UUID
 # except Exception as e:
 #     print('unable to connect to firebase', flush=True)
 
-def convert_pdf_to_image(input_pdf,output_directory,page_number):
-    # images = convert_from_path(input_pdf)
+
+def convert_pdf_to_image(input_pdf, output_directory, page_number):
     base_images = []
     try:
         pdf_document = fitz.open(input_pdf)
     except Exception as e:
-        # Code to handle any type of exception
-        return {'type':'error','response':str(e)}
-   
+        return {'type': 'error', 'response': str(e)}
+
     # Get the page
-    page = pdf_document.load_page(page_number)        
-    image = page.get_pixmap(matrix=fitz.Matrix(100/100, 100/100),dpi=425)
-    # image_filename = os.path.join(output_directory, f'page_{page}.png')
-    image_filename = os.path.join(output_directory, f'page_{page_number+1}.png')
+    page = pdf_document.load_page(page_number)
+    image = page.get_pixmap(matrix=fitz.Matrix(100/100, 100/100), dpi=425)
+    image_filename = os.path.join(output_directory, f'page_{page_number + 1}.png')
+
     for img_index, img in enumerate(page.get_images(full=True)):
-        # print(img_index,f'page_{page_number}_img_{img_index}.png')
         xref = img[0]
         base_image = pdf_document.extract_image(xref)
         image_data = base_image["image"]
-        # Save extracted images
         image_inside_page = Image.open(io.BytesIO(image_data))
-        pdf_images_per_page_path = output_directory + '/' + str(page_number+1)
+        pdf_images_per_page_path = os.path.join(output_directory, str(page_number + 1))
+
         if not os.path.exists(pdf_images_per_page_path):
-        # If it doesn't exist, create the folder
             os.makedirs(pdf_images_per_page_path)
-        img_filename = os.path.join(pdf_images_per_page_path, f'page_{page_number+1}_img_{img_index}.png')
-        # upload_image()
+
+        img_filename = os.path.join(pdf_images_per_page_path, f'page_{page_number + 1}_img_{img_index}.png')
         image_inside_page.save(img_filename)
-        # uploadResult = upload_image(img_filename,input_pdf,'base_image')
-   
+
         object_id, _, x_min, y_min, width, _, _, _, _, _ = img
         top_right_x = x_min + width
         top_right_y = y_min + image_inside_page.height
         bounding_box = [x_min, y_min, top_right_x, top_right_y]
 
-        
-        if(width*image_inside_page.height > 430):
-            base_images.append({'img_filename':img_filename,'bbox':bounding_box})
+        if width * image_inside_page.height > 430:
+            base_images.append({'img_filename': img_filename, 'bbox': bounding_box})
+
     image.save(image_filename)
     pdf_document.close()
-    return {'base_images':base_images,'page_number':page_number+1}
+    return {'base_images': base_images, 'page_number': page_number + 1}
+
   
-  
+def crop_header(image_path, header_percent=5):
+    """
+    Crops the header of the image by the given percentage.
+
+    :param image_path: Path to the image file.
+    :param header_percent: Percentage of the image height to crop from the top.
+    :return: None
+    """
+    try:
+        with Image.open(image_path) as img:
+            width, height = img.size
+            print(f"Original size of {image_path}: {width}x{height}")
+
+            # Calculate the pixel values for cropping based on the given percentage
+            header_height = int(height * (header_percent / 100))
+
+            cropping_box = (0, header_height, width, height)
+            cropped_img = img.crop(cropping_box)
+            cropped_img.save(image_path)
+            print(f"Cropped size of {image_path}: {cropped_img.size}")
+    except Exception as e:
+        print(f"Error cropping image {image_path}: {str(e)}")
+
+
 async def upload_image(file_path, input_pdf,UploadType,output_dir):
     # Get a reference to the Firebase Storage service
     try:
@@ -201,6 +221,9 @@ class convertIntoImages:
 
         # Sort the list of image files based on the page number
         image_files.sort(key=get_page_number)
+        # Crop only the header from each image with percentage cropping
+        for image_file in image_files:
+            crop_header(image_file, header_percent=10)
         return {'type':'response','response':image_files}
     
     def cleanup(self):

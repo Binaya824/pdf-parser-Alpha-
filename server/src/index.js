@@ -14,12 +14,21 @@ import cors from "cors"
 import setupWebSocketServer from "./routes/WebSocket.js";
 // import Files from "./models/files.model.js";
 import swaggerDocs from "./swagger.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // config();
 
 export const app = express();
 
-app.use(morgan("dev"));
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+let accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), {
+  flags: "a"
+});
+
+app.use(morgan("combined" , {stream: accessLogStream}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors())
