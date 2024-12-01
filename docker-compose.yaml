@@ -102,6 +102,12 @@ services:
       - ./python:/app
       - outPutPath:/app/output
       - uploadPath:/app/uploads
+
+  redis:
+    image: "redis:7.0.15"
+    command: ["redis-server"]
+    networks:
+      - mjunction
 networks:
   mjunction:
     driver: bridge

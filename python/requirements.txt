@@ -17,3 +17,7 @@ PyMuPDF==1.23.14
 # fitz
 # tqdm
 firebase-admin==6.3.0
+paddleocr
+paddlepaddle
+albumentations
+redis==4.0.0

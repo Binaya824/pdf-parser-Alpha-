@@ -217,8 +217,10 @@ export const extractDataAndUploadToDBApi = catchAsync(
     res.status(200).json({
       status: "success",
       error: false,
-      message: extractedData.validationErrorInfo.error 
-        ? `Data extracted successfully: ${"validation Error Info : " + JSON.stringify(extractedData.validationErrorInfo , null , 2)}` 
+      message: extractedData.errorMessages.length > 0 
+        ? `Data extracted successfully: Validation Error Info: ${
+            extractedData.errorMessages?.join(", ").replace(/\\?"/g, "") || "No validation errors."
+          }`
         : "Data extracted successfully",
       data: {
         clauses: extractedData.result,

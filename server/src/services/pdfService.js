@@ -37,8 +37,54 @@ class PdfTextExtractor {
     }
 
     validate(str) {
-        return str.match(/^(?:\b([ivxlcd]+)\.|\b([abcefhjklno]\.))\s/m);
+        const nonValidMatch = str.match(/^(?:([ivxlcdIVXLCD]+)\.|([ivxlcdIVXLCD]+)\)|[a-zA-Z]\.|([abcefhjklnoABCEFHJKLNO]\.|[A-Z]\)|\|\.|\|\)))(?:\s.*)?$/);
+        if(nonValidMatch){
+            const isSubPoint = str.match(/^(?:[a-z]\))(\s*.*)?$/)
+            if(isSubPoint){
+                return null
+            }else{
+
+                return nonValidMatch
+            }
+        }
     }
+
+    isValidPoint(previousPoint, currentPoint) {
+        if(!currentPoint) return null
+        // Split the points into their respective levels
+        const prevLevels = previousPoint.replace(/\.$/, '').split('.').map(Number);
+        const currLevels = currentPoint.replace(/\.$/, '').split('.').map(Number);
+        
+        // Traverse through levels to check validity
+        for (let i = 0; i < Math.min(prevLevels.length, currLevels.length); i++) {
+            if (currLevels[i] > prevLevels[i]) {
+                return null
+            } else if (currLevels[i] < prevLevels[i]) {
+                return currentPoint
+            }
+        }
+    }
+
+    generateValidationErrorsMessages(validationErrorInfo) {
+        const groupedErrors = validationErrorInfo.errorPages.reduce((acc, page, index) => {
+            if (!acc[page]) acc[page] = [];
+            acc[page].push({
+                point: validationErrorInfo.nonValidatedPoints[index],
+                errorPoint: validationErrorInfo.errorPoint[index]
+            });
+            return acc;
+        }, {});
+    
+        const messages = [];
+        for (const [page, errors] of Object.entries(groupedErrors)) {
+            errors.forEach(({ point, errorPoint }) => {
+                messages.push(`Point: "${point}" at location "${errorPoint}" in ${page}`);
+            });
+        }
+    
+        return messages;
+    }
+    
 
 
 
@@ -128,7 +174,11 @@ class PdfTextExtractor {
         for (const chunk of chunkedFiles) {
             if (stopExtracting) break extractLoop;
             const promises = chunk.map(async (file) => {
-                const { data: { text } } = await scheduler.addJob('recognize', file);
+                const { data: { text } } = await scheduler.addJob('recognize', file , {
+                    tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ().,;:\'"?!/\\|_- ivxlcdmIVXLCDM',
+                    preserve_interword_spaces: 1, // Preserve spaces between words
+                    psm: 6  // Block of text segmentation
+                });
                 progress++;
                 trackProgress();
                 // console.log({length: text.length})
@@ -233,54 +283,92 @@ class PdfTextExtractor {
                         /^(?:\d+(\.\d+)*\.$|\*\*End of Clauses\*\*)$/
                     );
 
-                    const subPointMatch = token.match(/(?:^|\s)([^\s\)]\)) (.+?)(?=(?:\n\s*)[^\s\)]\)|$)/gs);
+                    const subPointMatch = token.match(/^(?:[a-z]\))(\s*.*)?$/);                        
+                    // console.log(token," =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , subPointMatch)
+
                     
                     if(subPointMatch){
                         currentSubPoint = subPointMatch[0].trim().substring(0 ,2).replace(/(\b1\))\s*/g, 'i) ').replace(/(\bI\))\s*/g, 'l) ')
+                        // console.log(token," =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , currentSubPoint)
+                        isValidationError = false;
                     }
 
                     if (pointMatch && !stopExtracting && !isInsideDoubleHash) {
-                        console.log("____________________________)))))))))))))))))))))))))))))) pointmatch" , pointMatch)
+                        // const nonValids = this.isValidPoint(currentPoint, pointMatch[0]);
+
+                        // Check if the pointMatch is already present in the result
+                        const isPointMatchInResult = result && pointMatch[0] && Object.hasOwn(result, pointMatch[0]);
+
+                        if (isPointMatchInResult) {
+                            // console.log(
+                            //     "Error page -)()()()()()()()()()()()()()()()()()(",
+                            //     chunk[textsIndex],
+                            //     "errorPoint",
+                            //     currentPoint
+                            // );
+
+                            // Push to nonValidatedPoints if validation failed or point already exists
+                            // validationErrorInfo.nonValidatedPoints.push(nonValids || { duplicatePoint: pointMatch[0] });
+                        //    if (isPointMatchInResult) {
+                        // }
+                            validationErrorInfo.nonValidatedPoints.push(pointMatch[0].split(' ')[0]);
+                            validationErrorInfo.errorPages.push(chunk[textsIndex].split("/")[2].replace('.png' , ''));
+                            validationErrorInfo.errorPoint.push(currentPoint);
+                            validationErrorInfo.error = true;
+
+                            isValidationError = true;
+                        }
+
+                        console.log("____________________________))))))))))))))))))))))))))))))token pointmatch" , pointMatch)
                         if (Object.hasOwn(result, pointMatch[0])) {
                             cleanedText = pointMatch[0];
+                            isValidationError = false;
                             result[currentPoint]["content"] = (result[currentPoint]["content"]? result[currentPoint]["content"]: "").concat(cleanedText);
                         } else {
                             tableEncountered = false;
                             currentPoint = pointMatch[0];
+                            isValidationError = false;
                             currentSubPoint = ""
                             result[currentPoint] = {"content": "" , "sequence" : {}};
                         }
                         // console.log(currentPoint)
                     } else if (tokenSeparated && !isInsideDoubleHash) {
                         for (const separatedToken of tokenSeparated) {
-                            // console.log("&&&&&&&&&&&&&&separatedtoken" , separatedToken)
-
+                            // const subPointMatch = separatedToken.match(/(?:^|\s)([a-z]\)) (.+?)(?=(?:\n\s*)[a-z]\)|$)/gs);
+                            const subPointMatch = separatedToken.match(/^(?:[a-z]\))(\s*.*)?$/);
+                            if(subPointMatch){
+                                currentSubPoint = subPointMatch[0].trim().substring(0 ,2).replace(/(\b1\))\s*/g, 'i) ').replace(/(\bI\))\s*/g, 'l) ')
+                                isValidationError = false;
+                                // console.log(separatedToken," =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",subPointMatch,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , currentSubPoint)
+                            }
+                            
                             if (!stopExtracting && clauseStarted && !tableEncountered) {
-
-
                                 const validationPoints = this.validate(separatedToken);
+                                console.log("&&&&&&&&&&&&&& ******************************************separatedtoken" , separatedToken)
                                 if (validationPoints) {
                                     console.log('Non validated points--', validationPoints[0]);
                                     console.log("error page -)()()()()()()()()()()()()()()()()()(" , chunk[textsIndex] , "errorPoint" , currentPoint)
-                                    validationErrorInfo.nonValidatedPoints.push(validationPoints[0]);
-                                    validationErrorInfo.errorPages.push(chunk[textsIndex].split("/")[2]);
+                                    validationErrorInfo.nonValidatedPoints.push(validationPoints[0].split(' ')[0]);
+                                    validationErrorInfo.errorPages.push(chunk[textsIndex].split("/")[2].replace('.png' , ''));
                                     validationErrorInfo.errorPoint.push(currentPoint);
                                     validationErrorInfo.error = true;
                                     // nonValidatedPoints.push({validationPoints:validationPoints[0] , textsIndex});
                                     isValidationError = true;
-                                }else{
-                                    isValidationError = false;
                                 }
                             }
 
                             let separatedTokenMatch;
 
-                            if (Object.keys(result).length === 1 && Object.values(result)[0]["content"] === 'INTRODUCTION ') {
+                            if (Object.keys(result).length === 1 && Object.values(result)[0]["content"] === 'INTRODUCTION') {
                                 separatedTokenMatch = separatedToken.match(
                                     /^(?:\d+(\.\d+)*\.$|\*\*End of Clauses\*\*)$/
                                 );
+                                // console.log(separatedToken , "____________________________)))))))))))))))))))))))))))))) separatedTokenMatch >>>>>" , pointMatch)
+
                             } else {
-                                separatedTokenMatch = separatedToken.match(/^\d+(\.\d+)+(\.)+$|\\End of Clauses\\$/)
+                                separatedTokenMatch = separatedToken.match( /^(?:\d+(\.\d+)*\.$|\*\*End of Clauses\*\*)$/)
+                                // console.log(separatedToken , "____________________________)))))))))))))))))))))))))))))) separatedTokenMatch" , pointMatch)
+
                             }
 
                             // console.log({ separatedTokenMatch: separatedToken.match(/^\d+(\.\d+)+(\.)+$|\\End of Clauses\\$/) })
@@ -313,17 +401,21 @@ class PdfTextExtractor {
                             ) {
                                 // tableEncountered = false;
                                 currentPoint = separatedTokenMatch[0];
-                                console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! separated current point" , currentPoint)
+                                // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! separated current point" , currentPoint)
+                                isValidationError = false
                                 currentSubPoint = "";
                                 result[currentPoint] = {"content": "" , "sequence" : {}};
                             } else if (currentPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !currentSubPoint && !isValidationError) {
                                 cleanedText = separatedToken.replace(/\s+/g, " ").trim();
-                                console.log("*************************************************************************************" , cleanedText)
+                                // console.log("*************************************************************************************" , cleanedText)
                                 result[currentPoint]["content"] += cleanedText + " ";
                             }else if(currentSubPoint && !stopExtracting && !ignoreToken && !isInsideDoubleHash && !pointMatch && !isValidationError){
-                                cleanedText = separatedToken.replace(/\s+/g, " ").trim();
-                                console.log("************************************************************************************* subContent" , cleanedText)
-                                result[currentPoint]["sequence"][currentSubPoint] = result[currentPoint]["sequence"][currentSubPoint] ? result[currentPoint]["sequence"][currentSubPoint].replace(/[^\s\)]\)\s*/, '').trim() + cleanedText + " " : cleanedText + " ";
+                                cleanedText = separatedToken.replace(/\s+/g, " ").trim().replace(/[^\s\)]\)\s*/, '');
+                                // console.log("************************************************************************************* subContent" , cleanedText)
+                                result[currentPoint] = result[currentPoint] || { sequence: {} };
+                                result[currentPoint]["sequence"][currentSubPoint] = 
+                                    (result[currentPoint]["sequence"][currentSubPoint]?.replace(/[^\s\)]\)\s*/, '').trim() || '') 
+                                    + cleanedText + " ";
                             }
                             // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" , currentSubPoint)
 
@@ -443,7 +535,10 @@ class PdfTextExtractor {
             if (!ifIntroductionExists) {
                 throw new Error(`Validation error, The first entry should be  '1. INTRODUCTION'`);
             }
-        } else {
+        } else if(!result.hasOwnProperty("1.")){
+            throw new Error(`Validation error, Introduction is missing. The first entry should be  '1. INTRODUCTION' or The document is either missing headers and footers, causing issues with cropping the introduction`);
+        }
+        else {
             throw new Error(`Validation Error: The document is either missing headers and footers, causing issues with cropping the introduction, or it does not meet our validation criteria. Please ensure that the document includes the required headers and footers and complies with the specified validation rules.`);
         }
 
@@ -460,7 +555,7 @@ class PdfTextExtractor {
             }
         })
         await scheduler.terminate();
-        return {result , validationErrorInfo}
+        return {result , errorMessages: this.generateValidationErrorsMessages(validationErrorInfo)}
     };
 
     async extractImagesFromPdf(filePath) {

@@ -3,7 +3,7 @@ import json
 import asyncio
 import websockets
 from module_convert_into_images import convertIntoImages
-from module_extract_table import extractTable
+from module_extract_table import extract_table_multiprocessor
 # Define a WebSocket handler function to handle incoming connections.
 async def websocket_handler(websocket, path):
     try:
@@ -13,10 +13,10 @@ async def websocket_handler(websocket, path):
             parsed_data = json.loads(message)
             response = []
             if(parsed_data['type'] == 'extract_table'):
-                objExtractTable = extractTable(parsed_data,websocket)
+                response = await extract_table_multiprocessor(parsed_data,websocket)
                 # print("-----------------------------------------------------> " , objExtractTable)
-                extractTableResult = await objExtractTable.extract_table_multiprocessor()
-                response = extractTableResult
+                # extractTableResult = await objExtractTable.extract_table_multiprocessor()
+                # response = extractTableResult
                 print("object extracted============================================================================:::::::::::>>>>>>>>>>" , response)
                 
             else:
