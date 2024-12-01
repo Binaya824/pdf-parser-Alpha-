@@ -202,7 +202,7 @@ export const extractDataAndUploadToDBApi = catchAsync(
 
       // await clauses.save();
       // tables = await Table.findByPk(table.id);
-      tables = table.data;
+      tables = table.jsonResponse.data;
       console.log(tables)
     } catch (err) {
       console.log(err);
@@ -220,8 +220,8 @@ export const extractDataAndUploadToDBApi = catchAsync(
       message: extractedData.errorMessages.length > 0 
         ? `Data extracted successfully: Validation Error Info: ${
             extractedData.errorMessages?.join(", ").replace(/\\?"/g, "") || "No validation errors."
-          }`
-        : "Data extracted successfully",
+          } ${tables.missingTables.length > 0 ? `Missing tables clauses: ${tables.missingTables.join(", ")}` : ""}`
+        : `Data extracted successfully : ${table.missingTables.length > 0 ? `Tables missing at : ${table.missingTables.join(", ")}` : ""}`,
       data: {
         clauses: extractedData.result,
         tables,

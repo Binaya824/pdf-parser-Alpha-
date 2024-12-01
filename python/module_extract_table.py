@@ -257,7 +257,7 @@ def get_tables_data(path):
             # Try multiple OCR configurations
             extracted_text = pytesseract.image_to_string(gray, config='--psm 6 --oem 3')
             if not extracted_text.strip():
-                extracted_text = pytesseract.image_to_string(gray, config='--psm 11')
+                extracted_text = pytesseract.image_to_string(gray, config='--psm 11 --oem 1')
 
             final_boxes.append({"box": [s1, s2, s1 + s3, s2 + s4], "text": extracted_text.strip()})
 

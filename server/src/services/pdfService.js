@@ -10,6 +10,7 @@ import winkNLP from "wink-nlp";
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 import os from "os";
+import { table } from "console";
 
 class PdfTextExtractor {
     constructor() {
@@ -20,7 +21,7 @@ class PdfTextExtractor {
         this.clauseEnded = false;
         this.lastClausePage = "";
         this.ClausePages = [];
-
+        this.tableIndices = [];
         this.currentPoint = "";
         this.tableEncountered = false;
         this.clauseStarted = false;
@@ -84,6 +85,31 @@ class PdfTextExtractor {
     
         return messages;
     }
+
+    findMissingTable(tableIndices, jsonResponse) {
+        const tableInfo = {}
+        tableIndices.forEach((tableIndex) => {
+            tableInfo[tableIndex] = 0
+        })
+
+        // const missingTables = [];
+        jsonResponse["data"].forEach((element)=>{
+            element["table"].forEach((table)=>{
+                const key = table["table_identifier"]["key"]
+                console.log("table identifier key $%$%$%$%$%$%%%%$%$%$%$%$%% " , key)
+                if(tableInfo[key] !== undefined) {
+                    tableInfo[key] = tableInfo[key] + 1
+                }
+            })
+        })
+
+        const keysWithZero = Object.entries(tableInfo)
+            .filter(([key, value]) => value === 0)
+            .map(([key]) => key);
+
+        console.log("table Info $%$%$%$%$%$%%%%$%$%$%$%$%% " , tableInfo)
+        return keysWithZero;
+    }
     
 
 
@@ -126,7 +152,7 @@ class PdfTextExtractor {
         let stopExtracting = false;
         // const nonValidatedPoints = [];
         let progress = 0; // Track the number of files processed
-        let tableIndices = [];
+        // let tableIndices = [];
         let isValidationError = false;
         let validationErrorInfo = {
             nonValidatedPoints: [],
@@ -208,10 +234,10 @@ class PdfTextExtractor {
                         // if (indexOfTableKeyword !== -1) {
                         // }
                         tableEncountered = true;
-                        const elIndex = tableIndices.indexOf(currentPoint);
+                        const elIndex = this.tableIndices.indexOf(currentPoint);
                         if(elIndex === -1){
 
-                            tableIndices.push(currentPoint);
+                            this.tableIndices.push(currentPoint);
                         }
                         // tableString = token.substring(0, indexOfTableKeyword + 5);
                         
@@ -484,7 +510,7 @@ class PdfTextExtractor {
             // })
 
 
-            tableIndices.forEach((index)=> {
+            this.tableIndices.forEach((index)=> {
                 if(result[index]){
                     
                     const text = result[index]["content"];
@@ -518,7 +544,7 @@ class PdfTextExtractor {
 
 
             console.log(JSON.stringify(result , null , 2))
-            console.log("table indices ================>" , tableIndices)
+            console.log("table indices ================>" , this.tableIndices)
             if (ws != '') {
                 ws.send(JSON.stringify({ type: 'progress_data', data: result }));
             }
@@ -572,7 +598,7 @@ class PdfTextExtractor {
 
             const uuid = uuidv4();
             // await ws.send('Table extraction started.')
-            if (ws != '') {
+            if (ws != '') {  
                 await ws.send(JSON.stringify({ "type": "new_task_started", "message": "Table extraction started.", task: 'table' }));
             }
 
@@ -582,8 +608,11 @@ class PdfTextExtractor {
 
             const jsonResponse = await sendJsonRequest({ 'tables': this.ClausePages, 'uuid': uuid, 'type': 'extract_table' }, ws);
             console.log("table response" , JSON.stringify(jsonResponse , null , 2))
+            const missingTables = this.findMissingTable(this.tableIndices, jsonResponse);
+            console.log("missing tables ==>>" , missingTables)
+            
             this.ClausePages = [];
-            return jsonResponse;
+            return {jsonResponse , missingTables};
         } catch (error) {
             console.error("Error:", error);
         }
