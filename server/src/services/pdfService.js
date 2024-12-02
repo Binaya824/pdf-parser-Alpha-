@@ -88,24 +88,32 @@ class PdfTextExtractor {
 
     findMissingTable(tableIndices, jsonResponse) {
         const tableInfo = {}
-        tableIndices.forEach((tableIndex) => {
-            tableInfo[tableIndex] = 0
-        })
+        let keysWithZero = [];
+        if(tableIndices.length > 0) {
+            tableIndices.forEach((tableIndex) => {
+                tableInfo[tableIndex] = 0
+            })
+
+            jsonResponse["data"].forEach((element)=>{
+                element["table"].forEach((table)=>{
+                    const key = table["table_identifier"]["key"]
+                    console.log("table identifier key $%$%$%$%$%$%%%%$%$%$%$%$%% " , key)
+                    if(tableInfo[key] !== undefined) {
+                        tableInfo[key] = tableInfo[key] + 1
+                    }
+                })
+            })
+
+
+            keysWithZero = Object.entries(tableInfo)
+                .filter(([key, value]) => value === 0)
+                .map(([key]) => key);
+        }
 
         // const missingTables = [];
-        jsonResponse["data"].forEach((element)=>{
-            element["table"].forEach((table)=>{
-                const key = table["table_identifier"]["key"]
-                console.log("table identifier key $%$%$%$%$%$%%%%$%$%$%$%$%% " , key)
-                if(tableInfo[key] !== undefined) {
-                    tableInfo[key] = tableInfo[key] + 1
-                }
-            })
-        })
 
-        const keysWithZero = Object.entries(tableInfo)
-            .filter(([key, value]) => value === 0)
-            .map(([key]) => key);
+           
+
 
         console.log("table Info $%$%$%$%$%$%%%%$%$%$%$%$%% " , tableInfo)
         return keysWithZero;
