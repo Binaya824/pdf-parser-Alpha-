@@ -209,7 +209,7 @@ class PdfTextExtractor {
             if (stopExtracting) break extractLoop;
             const promises = chunk.map(async (file) => {
                 const { data: { text } } = await scheduler.addJob('recognize', file , {
-                    tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ().,;:\'"?!/\\|_- ivxlcdmIVXLCDM',
+                    tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ().,;:\'"?!/\\|_-* ivxlcdmIVXLCDM',
                     preserve_interword_spaces: 1, // Preserve spaces between words
                     psm: 6  // Block of text segmentation
                 });
