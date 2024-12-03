@@ -209,9 +209,10 @@ class PdfTextExtractor {
             if (stopExtracting) break extractLoop;
             const promises = chunk.map(async (file) => {
                 const { data: { text } } = await scheduler.addJob('recognize', file , {
-                    tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ().,;:\'"?!/\\|_-* ivxlcdmIVXLCDM',
+                    tessedit_char_whitelist: '.123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\'"?!/\\_-*# ivxlcdmIVXLCDM',
                     preserve_interword_spaces: 1, // Preserve spaces between words
-                    psm: 6  // Block of text segmentation
+                    psm: 6,
+                    oem: 1 // Block of text segmentation
                 });
                 progress++;
                 trackProgress();
@@ -317,14 +318,21 @@ class PdfTextExtractor {
                         /^(?:\d+(\.\d+)*\.$|\*\*End of Clauses\*\*)$/
                     );
 
-                    const subPointMatch = token.match(/^(?:[a-z]\))(\s*.*)?$/);                        
+                    const subPointMatch = token.replace('0)' , 'o)').match(/^(?:[a-z]\))(\s*.*)?$/);                        
                     // console.log(token," =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , subPointMatch)
 
                     
                     if(subPointMatch){
-                        currentSubPoint = subPointMatch[0].trim().substring(0 ,2).replace(/(\b1\))\s*/g, 'i) ').replace(/(\bI\))\s*/g, 'l) ')
+                        currentSubPoint = subPointMatch[0].trim().substring(0 ,2).replace(/(\b1\))\s*/g, 'i) ').replace(/(\bI\))\s*/g, 'l) ').replace('0)' , 'o)')
                         // console.log(token," =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , currentSubPoint)
                         isValidationError = false;
+                    }
+                    if (
+                        token === "**End of Clauses**" || 
+                        token === "**End of Clauses™**" || token === "**End of Clauses™*" || token === "***End of Clauses***" ||
+                        token === "“*End of clauses™" || token === "**¥*% End of clauses ***" || token === "**¥* End of clauses ***" || token === "**End of Clauses*"
+                ) {
+                        stopExtracting = true;
                     }
 
                     if (pointMatch && !stopExtracting && !isInsideDoubleHash) {
@@ -369,11 +377,11 @@ class PdfTextExtractor {
                     } else if (tokenSeparated && !isInsideDoubleHash) {
                         for (const separatedToken of tokenSeparated) {
                             // const subPointMatch = separatedToken.match(/(?:^|\s)([a-z]\)) (.+?)(?=(?:\n\s*)[a-z]\)|$)/gs);
-                            const subPointMatch = separatedToken.match(/^(?:[a-z]\))(\s*.*)?$/);
+                            const subPointMatch = separatedToken.replace('0)' , 'o)').match(/^(?:[a-z]\))(\s*.*)?$/);
                             if(subPointMatch){
-                                currentSubPoint = subPointMatch[0].trim().substring(0 ,2).replace(/(\b1\))\s*/g, 'i) ').replace(/(\bI\))\s*/g, 'l) ')
+                                currentSubPoint = subPointMatch[0].trim().substring(0 ,2).replace(/(\b1\))\s*/g, 'i) ').replace(/(\bI\))\s*/g, 'l)').replace('0)' , 'o)')
                                 isValidationError = false;
-                                // console.log(separatedToken," =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",subPointMatch,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , currentSubPoint)
+                                console.log(separatedToken," =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",subPointMatch,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" , currentSubPoint)
                             }
                             
                             if (!stopExtracting && clauseStarted && !tableEncountered) {
@@ -408,9 +416,9 @@ class PdfTextExtractor {
                             // console.log({ separatedTokenMatch: separatedToken.match(/^\d+(\.\d+)+(\.)+$|\\End of Clauses\\$/) })
 
                             if (
-                                separatedToken === "**End of Clauses**" ||
+                                separatedToken === "**End of Clauses**" || 
                                 separatedToken === "**End of Clauses™**" || separatedToken === "**End of Clauses™*" || separatedToken === "***End of Clauses***" ||
-                                separatedToken === "“*End of clauses™" || separatedToken === "**¥*% End of clauses ***" || separatedToken === "**¥* End of clauses ***"
+                                separatedToken === "“*End of clauses™" || separatedToken === "**¥*% End of clauses ***" || separatedToken === "**¥* End of clauses ***" || separatedToken === "**End of Clauses*"
                         ) {
                                 stopExtracting = true;
                             }
@@ -449,16 +457,16 @@ class PdfTextExtractor {
                                 result[currentPoint] = result[currentPoint] || { sequence: {} };
                                 result[currentPoint]["sequence"][currentSubPoint] = 
                                     (result[currentPoint]["sequence"][currentSubPoint]?.replace(/[^\s\)]\)\s*/, '').trim() || '') 
-                                    + cleanedText + " ";
+                                    +" "+ cleanedText + " ";
                             }
                             // console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" , currentSubPoint)
 
                             ignoreToken = false
-                            if (!clauseStarted) {
-                                currentPoint = "";
-                                cleanedText = "";
-                                delete result[currentPoint];
-                            }
+                            // if (!clauseStarted) {
+                            //     currentPoint = "";
+                            //     cleanedText = "";
+                            //     delete result[currentPoint];
+                            // }
                         }
                     }
 
