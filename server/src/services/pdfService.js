@@ -328,7 +328,7 @@ class PdfTextExtractor {
                         isValidationError = false;
                     }
                     if (
-                        token === "**End of Clauses**" || 
+                        token === "**End of Clauses**" || token === "**End of Clauses" ||
                         token === "**End of Clauses™**" || token === "**End of Clauses™*" || token === "***End of Clauses***" ||
                         token === "“*End of clauses™" || token === "**¥*% End of clauses ***" || token === "**¥* End of clauses ***" || token === "**End of Clauses*"
                 ) {
@@ -416,7 +416,7 @@ class PdfTextExtractor {
                             // console.log({ separatedTokenMatch: separatedToken.match(/^\d+(\.\d+)+(\.)+$|\\End of Clauses\\$/) })
 
                             if (
-                                separatedToken === "**End of Clauses**" || 
+                                separatedToken === "**End of Clauses**" || separatedToken === "**End of Clauses" || 
                                 separatedToken === "**End of Clauses™**" || separatedToken === "**End of Clauses™*" || separatedToken === "***End of Clauses***" ||
                                 separatedToken === "“*End of clauses™" || separatedToken === "**¥*% End of clauses ***" || separatedToken === "**¥* End of clauses ***" || separatedToken === "**End of Clauses*"
                         ) {

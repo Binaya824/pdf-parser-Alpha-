@@ -255,9 +255,9 @@ def get_tables_data(path):
             gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
 
             # Try multiple OCR configurations
-            extracted_text = pytesseract.image_to_string(gray, config='--psm 6 --oem 3')
+            extracted_text = pytesseract.image_to_string(gray, config='--psm 6 --oem 3 -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ(): ivxlcdmIVXLCDM-_')
             if not extracted_text.strip():
-                extracted_text = pytesseract.image_to_string(gray, config='--psm 11 --oem 1')
+                extracted_text = pytesseract.image_to_string(gray, config='--psm 11 --oem 1 -c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ(): ivxlcdmIVXLCDM-_')
 
             final_boxes.append({"box": [s1, s2, s1 + s3, s2 + s4], "text": extracted_text.strip()})
 
