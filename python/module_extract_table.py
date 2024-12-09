@@ -243,35 +243,33 @@ def get_tables_data(path):
     padding = 10
 
     for s1, s2, s3, s4 in boxes:
-        if s3 < image_width-30 and s4 < image_height-30:  # Filter large boxes
-            # image = Image.open(path).convert("RGB")
-            # if s1 in column_x_coords:
-            #     column_x_coords[s1] = True
-            #     cropped_image = image.crop([s1 - padding, s2 - padding, s1 + s3 + padding, s2 + s4 + padding])
-            # else:
-            #     cropped_image = image.crop([s1, s2, s1 + s3, s2 + s4])
-
-            # image_array = np.array(cropped_image)
-            # gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
-            image = Image.open(path).convert("RGB")
+        # if s3 < image_width - 30 and s4 < image_height - 30:  # Filter large boxes
+        image = Image.open(path).convert("RGB")
+        if s1 in column_x_coords:
+            column_x_coords[s1] = True
+            cropped_image = image.crop([s1 - padding, s2 - padding, s1 + s3 + padding, s2 + s4 + padding])
+        else:
             cropped_image = image.crop([s1, s2, s1 + s3, s2 + s4])
-            image_array = np.array(cropped_image)
-            gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
 
-            # Try multiple OCR configurations
+        image_array = np.array(cropped_image)
+        gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
+
+        # Try multiple OCR configurations
+        extracted_text = pytesseract.image_to_string(
+            gray, 
+            config='--psm 6 --oem 3 -c tessedit_char_whitelist=" .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\\?!/\\_ -*#ivxlcdmIVXLCDM"'
+        )
+
+        if not extracted_text.strip():
             extracted_text = pytesseract.image_to_string(
                 gray, 
-                config='--psm 6 --oem 3 -c tessedit_char_whitelist=" .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\\?!/\\_ -*#ivxlcdmIVXLCDM"'
+                config='--psm 11 --oem 1 -c tessedit_char_whitelist=" .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\\?!/\\_ -*#ivxlcdmIVXLCDM"'
             )
 
-            if not extracted_text.strip():
-                extracted_text = pytesseract.image_to_string(
-                    gray, 
-                    config='--psm 11 --oem 1 -c tessedit_char_whitelist=" .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\\?!/\\_ -*#ivxlcdmIVXLCDM"'
-                )
 
+        final_boxes.append({"box": [s1, s2, s1 + s3, s2 + s4], "text": extracted_text.strip().replace("fs)", "5").replace("rs)" , "5")})
 
-            final_boxes.append({"box": [s1, s2, s1 + s3, s2 + s4], "text": extracted_text.strip().replace("fs)", "5").replace("rs)" , "5")})
+            
 
     table_data = []
     rows = {}
