@@ -243,7 +243,7 @@ def get_tables_data(path):
     padding = 10
 
     for s1, s2, s3, s4 in boxes:
-        if s3 < image_width - 30 and s4 < image_height - 30:  # Filter large boxes
+        if s3 < image_width and s4 < image_height:  # Filter large boxes
             image = Image.open(path).convert("RGB")
             if s1 in column_x_coords:
                 column_x_coords[s1] = True
