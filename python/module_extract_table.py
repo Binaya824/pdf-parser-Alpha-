@@ -243,14 +243,18 @@ def get_tables_data(path):
     padding = 10
 
     for s1, s2, s3, s4 in boxes:
-        if s3 < image_width and s4 < image_height:  # Filter large boxes
-            image = Image.open(path).convert("RGB")
-            if s1 in column_x_coords:
-                column_x_coords[s1] = True
-                cropped_image = image.crop([s1 - padding, s2 - padding, s1 + s3 + padding, s2 + s4 + padding])
-            else:
-                cropped_image = image.crop([s1, s2, s1 + s3, s2 + s4])
+        if s3 < image_width-30 and s4 < image_height-30:  # Filter large boxes
+            # image = Image.open(path).convert("RGB")
+            # if s1 in column_x_coords:
+            #     column_x_coords[s1] = True
+            #     cropped_image = image.crop([s1 - padding, s2 - padding, s1 + s3 + padding, s2 + s4 + padding])
+            # else:
+            #     cropped_image = image.crop([s1, s2, s1 + s3, s2 + s4])
 
+            # image_array = np.array(cropped_image)
+            # gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
+            image = Image.open(path).convert("RGB")
+            cropped_image = image.crop([s1, s2, s1 + s3, s2 + s4])
             image_array = np.array(cropped_image)
             gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
 
