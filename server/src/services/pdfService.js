@@ -208,12 +208,19 @@ class PdfTextExtractor {
         for (const chunk of chunkedFiles) {
             if (stopExtracting) break extractLoop;
             const promises = chunk.map(async (file) => {
-                const { data: { text } } = await scheduler.addJob('recognize', file , {
-                    tessedit_char_whitelist: '.123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\'"?!/\\_-*# ivxlcdmIVXLCDM',
-                    preserve_interword_spaces: 1, // Preserve spaces between words
-                    psm: 6,
-                    oem: 1 // Block of text segmentation
+                // const { data: { text } } = await scheduler.addJob('recognize', file , {
+                //     tessedit_char_whitelist: '.123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\'"?!/\\_-*# ivxlcdmIVXLCDM',
+                //     preserve_interword_spaces: 1, // Preserve spaces between words
+                //     psm: 6,
+                //     oem: 1 // Block of text segmentation
+                // });
+                const { data: { text } } = await scheduler.addJob('recognize', file, {
+                    tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[]{}|;:\'",.<>?/\\`~₀₁₂₃₄₅₆₇₈₉¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞°₹€£¥ ivxlcdmIVXLCDM',
+                    preserve_interword_spaces: 1, 
+                    psm: 6, 
+                    oem: 1
                 });
+                
                 progress++;
                 trackProgress();
                 // console.log({length: text.length})

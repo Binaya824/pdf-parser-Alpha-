@@ -214,44 +214,45 @@ def get_table_bounding_box(imagePath):
 
 
 def get_tables_data(path):
-    # Load the image
     read_image = cv2.imread(path, 0)
     image_height, image_width = read_image.shape
 
-    # Preprocessing: Thresholding and inversion
-    grey_scale = cv2.adaptiveThreshold(read_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    _, grey_scale = cv2.threshold(read_image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     grey_scale = 255 - grey_scale
 
-    # Create kernels for detecting horizontal and vertical lines
     length = image_width // 100
     horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (length, 1))
     vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, length))
 
-    # Detect horizontal and vertical lines
     hor_lines = cv2.dilate(cv2.erode(grey_scale, horizontal_kernel, iterations=3), horizontal_kernel, iterations=3)
     ver_lines = cv2.dilate(cv2.erode(grey_scale, vertical_kernel, iterations=3), vertical_kernel, iterations=3)
 
-    # Combine horizontal and vertical lines to get the grid structure
-    combine = cv2.addWeighted(ver_lines, 0.6, hor_lines, 0.4, 0.0)
+    combine = cv2.addWeighted(ver_lines, 0.5, hor_lines, 0.5, 0.0)
     combine = cv2.erode(~combine, cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2)), iterations=2)
     _, combine = cv2.threshold(combine, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
-    # Find contours of the cells
     contours, _ = cv2.findContours(combine, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Function to get bounding boxes
     def get_boxes(num):
         boxes = [cv2.boundingRect(c) for c in num]
         return sorted(boxes, key=lambda b: (b[1], b[0]))  # Sort by Y first, then X.
 
     boxes = get_boxes(contours)
-
     final_boxes = []
     column_x_coords = {}
-    padding = 10
+    padding = 5
+    print("boxes ******" , boxes)
 
     for s1, s2, s3, s4 in boxes:
-        if s3 < 0.9 * image_width and s4 < 0.9 * image_height:  # Relaxed filtering for valid cells
+        print("------------------------------------------------------------------------------------------------------o")
+        print("")
+        print("")
+        print("before @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ image dimension" , image_width,"==>", s3 ,"~~~~~~~~", image_height , "==>", s4)
+        if s3 < image_width - 30 and s4 < image_height - 30:  # Filter large boxes
+            print("after @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ image dimension" , image_width - 30,">", s3 ,"~~~~~~~~", image_height -30 , ">", s4)
+            print("")
+            print("")
+            print("o------------------------------------------------------------------------------------------------------" , s1,"==", s2,"==>", s3,"==>", s4)
             image = Image.open(path).convert("RGB")
             if s1 in column_x_coords:
                 column_x_coords[s1] = True
@@ -262,24 +263,35 @@ def get_tables_data(path):
             image_array = np.array(cropped_image)
             gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
 
-            # OCR with fallback
             extracted_text = pytesseract.image_to_string(
-                gray, 
-                config='--psm 6 --oem 3 -c tessedit_char_whitelist=" .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\\?!/\\_ -*#ivxlcdmIVXLCDM"'
+                gray,
+                config=(
+                    '--psm 6 --oem 3 '
+                    '-c tessedit_char_whitelist="'
+                    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                    '!@#$%^&*()-_ =+[]{}|;:\,.<>?/`~'
+                    '₀₁₂₃₄₅₆₇₈₉¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞°₹€£¥"'
+                )
             )
+            
 
             if not extracted_text.strip():
                 extracted_text = pytesseract.image_to_string(
-                    gray, 
-                    config='--psm 11 --oem 1 -c tessedit_char_whitelist=" .123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()0,;:\\?!/\\_ -*#ivxlcdmIVXLCDM"'
+                    gray,
+                    config=(
+                        '--psm 11 --oem 1 '
+                        '-c tessedit_char_whitelist="'
+                        '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                        '!@#$%^&*()-_ =+[]{}|;:\,.<>?/`~'
+                        '₀₁₂₃₄₅₆₇₈₉¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞°₹€£¥"'
+                    )
                 )
 
-            final_boxes.append({
-                "box": [s1, s2, s1 + s3, s2 + s4],
-                "text": extracted_text.strip().replace("fs)", "5").replace("rs)", "5")
-            })
 
-    # Post-process rows and cells
+
+
+            final_boxes.append({"box": [s1, s2, s1 + s3, s2 + s4], "text": extracted_text.strip().replace("fs)", "5").replace("rs)" , "5")})
+
     table_data = []
     rows = {}
 
@@ -290,10 +302,9 @@ def get_tables_data(path):
         rows[row_y].append(box)
 
     for y in sorted(rows.keys()):  # Sort rows by their Y-coordinates
-        row_data = sorted(rows[y], key=lambda b: b["box"][0])  # Sort cells in each row by X-coordinates
-        table_data.append(row_data)
+        table_data.append(rows[y])
 
-    return table_data
+    return table_data # Reverse to match expected format
 
 
 def saveToDb(data_to_insert, uuid):

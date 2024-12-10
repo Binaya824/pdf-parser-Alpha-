@@ -21,3 +21,4 @@ paddleocr
 paddlepaddle
 albumentations
 redis==4.0.0
+scikit-learn
