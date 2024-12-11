@@ -152,8 +152,8 @@ def get_table_bounding_box(imagePath):
     tables = image_table.extract_tables()
     ocr_data = []
     table_identifier = {}
-    last_table_identifier = {}
 
+    tables = sorted(tables, key=lambda table: table.bbox.y1)
     for table in tables:
         bounding_boxes = {
             "left": table.bbox.x1,
@@ -190,7 +190,6 @@ def get_table_bounding_box(imagePath):
                         "key": match_text.group(1),
                         "value": match_text.group(3)
                     }
-                    last_table_identifier = table_identifier
                     # redis_conn.hset("shared_identifier", mapping=table_identifier)
 
                    
