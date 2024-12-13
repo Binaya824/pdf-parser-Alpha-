@@ -2,7 +2,7 @@ from multiprocessing import Pool, cpu_count, Manager , Value , Lock
 from functools import partial
 import json
 import os
-from PIL import Image
+from PIL import Image , ImageOps , ImageFilter
 import tempfile
 import cv2
 import numpy as np
@@ -112,12 +112,7 @@ def extract_table_worker(imagePath):
 
     if len(table_boundings) != 0:
         for table_bounding in table_boundings:
-            cropped_image = image_rgb.crop([
-                table_bounding['bounding_box']['left'] - 10,
-                table_bounding['bounding_box']['top'] - 10,
-                table_bounding['bounding_box']['right'] + 10,
-                table_bounding['bounding_box']['bottom'] + 10
-            ])
+            cropped_image = image_rgb.crop(table_bounding['bounding_box'])
             temp_file_name = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
             cropped_image.save(temp_file_name.name)
 
@@ -128,12 +123,7 @@ def extract_table_worker(imagePath):
                 "table": table_data,
                 "table_identifier": table_identifier,
                 'text': table_bounding['word'],
-                "box": [
-                    table_bounding['bounding_box']['left'] - 10,
-                    table_bounding['bounding_box']['top'] - 10,
-                    table_bounding['bounding_box']['right'] + 10,
-                    table_bounding['bounding_box']['bottom'] + 10
-                ]
+                "box": table_bounding['bounding_box']
             })
             cropped_image.close()
 
@@ -141,29 +131,118 @@ def extract_table_worker(imagePath):
     return {"table": prediction_list, "page": filename , "last_identifier": last_identifier}
 
 
+def find_large_boxes_no_height_limit(boxes, image_width, image_height):
+    # Convert boxes to [s1, s2, s1 + s3, s2 + s4] format
+    formatted_boxes = [(x, y, x + w, y + h) for x, y, w, h in boxes]
+
+    # Exclude the box that matches the image dimensions
+    filtered_boxes = [
+        (x1, y1, x2, y2) for x1, y1, x2, y2 in formatted_boxes
+        if not (x1 == 0 and y1 == 0 and x2 == image_width and y2 == image_height)
+    ]
+
+    # Filter boxes by a minimum width (e.g., greater than 50% of the image width)
+    width_threshold = image_width * 0.5
+    filtered_by_width = [
+        (x1, y1, x2, y2) for x1, y1, x2, y2 in filtered_boxes
+        if (x2 - x1) >= width_threshold
+    ]
+
+    # Sort boxes by area in descending order
+    sorted_boxes = sorted(
+        filtered_by_width,
+        key=lambda box: (box[2] - box[0]) * (box[3] - box[1]),  # Area = width * height
+        reverse=True
+    )
+
+    # Return the top N largest boxes (e.g., N = 2 or all if more are needed)
+    return sorted_boxes
+
+
+def filter_nested_boxes(boxes):
+    filtered_boxes = []
+
+    # Iterate through each box to check if it is inside any other box
+    for i, box1 in enumerate(boxes):
+        x1, y1, x2, y2 = box1
+        is_inside = False
+
+        for j, box2 in enumerate(boxes):
+            if i != j:  # Don't compare the box to itself
+                X1, Y1, X2, Y2 = box2
+                # Check if box1 is fully inside box2
+                if X1 <= x1 and Y1 <= y1 and X2 >= x2 and Y2 >= y2:
+                    is_inside = True
+                    break
+
+        if not is_inside:
+            filtered_boxes.append(box1)  # Keep the box if it's not inside any other box
+    filtered_boxes.sort(key=lambda box: box[1])
+    return filtered_boxes
+
+def find_tables(imagePath):
+    read_image = cv2.imread(imagePath, 0)
+    image_height, image_width = read_image.shape
+
+    print("image height =====>>>" , image_height)
+    print("image width =====>>>" , image_width)
+
+    _, grey_scale = cv2.threshold(read_image, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    grey_scale = 255 - grey_scale
+
+    length = image_width // 100
+    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (length, 1))
+    vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, length))
+
+    hor_lines = cv2.dilate(cv2.erode(grey_scale, horizontal_kernel, iterations=3), horizontal_kernel, iterations=3)
+    ver_lines = cv2.dilate(cv2.erode(grey_scale, vertical_kernel, iterations=3), vertical_kernel, iterations=3)
+
+    combine = cv2.addWeighted(ver_lines, 0.5, hor_lines, 0.5, 0.0)
+    combine = cv2.erode(~combine, cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2)), iterations=2)
+    _, combine = cv2.threshold(combine, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+    contours, _ = cv2.findContours(combine, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    def get_boxes(num):
+        boxes = [cv2.boundingRect(c) for c in num]
+        return sorted(boxes, key=lambda b: (b[1], b[0]))  # Sort by Y first, then X.
+    boxes = get_boxes(contours)
+    large_boxes = find_large_boxes_no_height_limit(boxes , image_width , image_height)
+    final_boxes = filter_nested_boxes(large_boxes)
+
+    return final_boxes
+
+def is_table_box(box, min_width=20, min_height=20):
+    x1, y1, x2, y2 = box
+    width = x2
+    height = y2
+    area = width * height
+    
+    # Ensure the box meets minimum width, height, and area criteria
+    return width > min_width and height > min_height
+
+
 def get_table_bounding_box(imagePath):
     """
     Identify tables in the image and assign bounding boxes.
     """
-    from img2table.document import Image as TableImage
+    # from img2table.document import Image as TableImage
 
-    image_table = TableImage(imagePath, detect_rotation=False)
+    # image_table = TableImage(imagePath, detect_rotation=False)
     main_image = Image.open(imagePath).convert("RGB")
-    tables = image_table.extract_tables()
+    # tables = image_table.extract_tables()
+    tables = find_tables(imagePath)
+
+    # here goes the detect tables boxes logic ----------------------------------------------------------------------------------------------->>>>>
+
     ocr_data = []
     table_identifier = {}
 
-    tables = sorted(tables, key=lambda table: table.bbox.y1)
-    for table in tables:
-        bounding_boxes = {
-            "left": table.bbox.x1,
-            "top": table.bbox.y1,
-            "right": table.bbox.x2,
-            "bottom": table.bbox.y2
-        }
+    tables = sorted(tables, key=lambda table: table[1])
+    for x, y, w, h in tables:
 
         # Crop image above the table for text extraction
-        cropped_image_above = main_image.crop([0, 0, main_image.width, bounding_boxes['top']])
+        cropped_image_above = main_image.crop([0, 0, main_image.width, y])
         if cropped_image_above.width == 0 or cropped_image_above.height == 0:
             continue
 
@@ -202,7 +281,7 @@ def get_table_bounding_box(imagePath):
 
         ocr_data.append({
             "word": extracted_text_above_table,
-            "bounding_box": bounding_boxes,
+            "bounding_box": [x, y, w, h],
             "table": True,
             "table_identifier": table_identifier  # Use the current identifier
         })
@@ -213,6 +292,7 @@ def get_table_bounding_box(imagePath):
 
 
 def get_tables_data(path):
+
     read_image = cv2.imread(path, 0)
     image_height, image_width = read_image.shape
 
@@ -237,17 +317,18 @@ def get_tables_data(path):
         return sorted(boxes, key=lambda b: (b[1], b[0]))  # Sort by Y first, then X.
 
     boxes = get_boxes(contours)
+    filtered_boxes = [box for box in boxes if is_table_box(box)]
     final_boxes = []
     column_x_coords = {}
     padding = 5
-    print("boxes ******" , boxes)
+    print("boxes ******" , filtered_boxes)
 
-    for s1, s2, s3, s4 in boxes:
+    for s1, s2, s3, s4 in filtered_boxes:
         print("------------------------------------------------------------------------------------------------------o")
         print("")
         print("")
         print("before @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ image dimension" , image_width,"==>", s3 ,"~~~~~~~~", image_height , "==>", s4)
-        if s3 < image_width - 30 and s4 < image_height - 30:  # Filter large boxes
+        if not (s3 == image_width and s4 == image_height) and not (s1 == 0 and s2 == 0):  # Filter large boxes
             print("after @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ image dimension" , image_width - 30,">", s3 ,"~~~~~~~~", image_height -30 , ">", s4)
             print("")
             print("")
@@ -259,32 +340,34 @@ def get_tables_data(path):
             else:
                 cropped_image = image.crop([s1, s2, s1 + s3, s2 + s4])
 
-            image_array = np.array(cropped_image)
-            gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
+            # image_array = np.array(cropped_image)
+            # gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
+
+            gray_image = ImageOps.grayscale(cropped_image)
+
+            # Enhance the contrast to make the text more visible
+            enhanced_image = ImageOps.autocontrast(gray_image)
+            sharpened_image = enhanced_image.filter(ImageFilter.SHARPEN)
+            image_array = np.array(sharpened_image)
+            gray = image_array
 
             extracted_text = pytesseract.image_to_string(
                 gray,
-                config=(
-                    '--psm 6 --oem 3 '
-                    '-c tessedit_char_whitelist="'
-                    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                    '!@#$%^&*()-_ =+[]{}|;:\,.<>?/`~'
-                    '₀₁₂₃₄₅₆₇₈₉¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞°₹€£¥"'
-                )
+                config="--psm 11 --oem 1 custom_config.txt"
             )
             
 
             if not extracted_text.strip():
                 extracted_text = pytesseract.image_to_string(
                     gray,
-                    config=(
-                        '--psm 11 --oem 1 '
-                        '-c tessedit_char_whitelist="'
-                        '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                        '!@#$%^&*()-_ =+[]{}|;:\,.<>?/`~'
-                        '₀₁₂₃₄₅₆₇₈₉¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞°₹€£¥"'
-                    )
+                    config="--psm 6 --oem 3 custom_config.txt"
                 )
+
+            # if not extracted_text.strip():
+            #     extracted_text = pytesseract.image_to_string(
+            #         gray,
+            #         config="--psm 10 --oem 3 custom_config.txt"
+            #     )
 
 
 
