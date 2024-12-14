@@ -323,7 +323,7 @@ def get_tables_data(path):
     filtered_boxes = [box for box in boxes if is_table_box(box)]
     final_boxes = []
     column_x_coords = {}
-    padding = 5
+    padding = 10
     print("boxes ******" , filtered_boxes)
 
     for s1, s2, s3, s4 in filtered_boxes:
@@ -352,16 +352,29 @@ def get_tables_data(path):
             enhanced_image = ImageOps.autocontrast(gray_image)
             sharpened_image = enhanced_image.filter(ImageFilter.SHARPEN)
             image_array = np.array(sharpened_image)
-            gray = image_array
+            # Apply binary thresholding
+            _, binary_image = cv2.threshold(image_array, 127, 255, cv2.THRESH_BINARY)
 
-            result = ocr.ocr(gray, cls=True)
-            extracted_text = ""
+            # Optional: Resize image for better text detection
+            resized_image = cv2.resize(binary_image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
 
-            if result and isinstance(result, list) and len(result) > 0 and isinstance(result[0], list) and len(result[0]) > 0:
-                for line in result[0]:
-                    extracted_text += line[1][0] + " "
-            else:
-                print("PaddleOCR failed to detect text in this image segment.")
+            gray = resized_image
+
+            extracted_text = pytesseract.image_to_string(
+                gray,
+                config=r'--psm 11 --oem 1 -c tessedit_char_whitelist="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ₀₁₂₃₄₅₆₇₈₉¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞°₹€£¥!@#$%^&*()-_ ±=+[]{}|;:\,.<>?/`~\'\"IVXLCDMivxlcdm"'
+            )
+
+
+            if not extracted_text.strip():
+                result = ocr.ocr(gray, cls=True)
+                extracted_text = ""
+
+                if result and isinstance(result, list) and len(result) > 0 and isinstance(result[0], list) and len(result[0]) > 0:
+                    for line in result[0]:
+                        extracted_text += line[1][0] + " "
+                else:
+                    print("PaddleOCR failed to detect text in this image segment.")
 
            
 
