@@ -2,7 +2,7 @@ from multiprocessing import Pool, cpu_count, Manager , Value , Lock
 from functools import partial
 import json
 import os
-from PIL import Image , ImageOps , ImageFilter
+from PIL import Image , ImageOps , ImageFilter ,ImageDraw
 import tempfile
 import cv2
 import numpy as np
@@ -85,7 +85,12 @@ def extract_table_worker(imagePath):
 
     # Process the image and extract bounding boxes
     image_rgb = Image.open(imagePath).convert("RGB")
+    image_rgb_copy = image_rgb.copy()
     table_boundings = get_table_bounding_box(imagePath)
+    if len(table_boundings) != 0:
+      draw = ImageDraw.Draw(image_rgb)
+      for table_bounding in table_boundings:
+          draw.rectangle(table_bounding['bounding_box'] , fill="white")
     prediction_list = []
     last_identifier = {}
 
@@ -115,7 +120,7 @@ def extract_table_worker(imagePath):
 
     if len(table_boundings) != 0:
         for table_bounding in table_boundings:
-            cropped_image = image_rgb.crop(table_bounding['bounding_box'])
+            cropped_image = image_rgb_copy.crop(table_bounding['bounding_box'])
             temp_file_name = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
             cropped_image.save(temp_file_name.name)
 
