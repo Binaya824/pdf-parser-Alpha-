@@ -8,6 +8,9 @@ import cv2
 import numpy as np
 from pytesseract import pytesseract
 import re
+from paddleocr import PaddleOCR
+
+ocr = PaddleOCR(use_angle_cls=True, lang='en')
 # import redis
 
 
@@ -351,24 +354,16 @@ def get_tables_data(path):
             image_array = np.array(sharpened_image)
             gray = image_array
 
-            extracted_text = pytesseract.image_to_string(
-                gray,
-                config="--psm 11 --oem 1 custom_config.txt"
-            )
-            
+            result = ocr.ocr(gray, cls=True)
+            extracted_text = ""
 
-            if not extracted_text.strip():
-                extracted_text = pytesseract.image_to_string(
-                    gray,
-                    config="--psm 6 --oem 3 custom_config.txt"
-                )
+            if result and isinstance(result, list) and len(result) > 0 and isinstance(result[0], list) and len(result[0]) > 0:
+                for line in result[0]:
+                    extracted_text += line[1][0] + " "
+            else:
+                print("PaddleOCR failed to detect text in this image segment.")
 
-            # if not extracted_text.strip():
-            #     extracted_text = pytesseract.image_to_string(
-            #         gray,
-            #         config="--psm 10 --oem 3 custom_config.txt"
-            #     )
-
+           
 
 
 
